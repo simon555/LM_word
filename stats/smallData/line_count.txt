@@ -1,0 +1,4 @@
+number of total lines : 17207
+number of training lines : 12044
+number of validation lines : 3440
+number of test lines : 1721

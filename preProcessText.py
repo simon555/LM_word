@@ -62,7 +62,7 @@ def splitData():
         for line in pbar(file.readlines()):
             i+=1
         NumberOfLines=i
-        with open(infoDir + 'globalInfo.txt', 'a') as outstream:
+        with open(infoDir + 'line_count.txt', 'a') as outstream:
                 outstream.write('number of total lines : {}'.format( NumberOfLines) + '\n') 
            
         trainMaxIndex=int(0.7*NumberOfLines)
@@ -95,7 +95,7 @@ def splitData():
                 with open(outputDir_test + 'test.txt', 'a') as outstream:
                     outstream.write(line)            
             i+=1
-        with open(infoDir + 'globalInfo.txt', 'a') as outstream:
+        with open(infoDir + 'line_count.txt', 'a') as outstream:
             outstream.write('number of training lines : {}'.format( training_lines) + '\n') 
             outstream.write('number of validation lines : {}'.format( valid_lines) + '\n') 
             outstream.write('number of test lines : {}'.format( test_lines) + '\n') 
