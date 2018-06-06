@@ -8,8 +8,17 @@ import os
 
 tf.logging.set_verbosity(tf.logging.ERROR)
 
-data_dir = './data/train/'
-valid_data_dir = './data/valid/'
+
+if os.name=='nt':
+    #running on my local windows machine for debug
+    data_dir = './data/train/'
+    valid_data_dir = './data/valid/'
+else:
+    #running on GPU server
+    data_dir = '/mnt/raid1/text/big_files/train/'
+    valid_data_dir = '/mnt/raid1/text/big_files/valid/'
+    
+    
 save_dir = './checkpoints/'
 if not os.path.exists(save_dir):
     os.makedirs(save_dir)
