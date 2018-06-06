@@ -38,20 +38,20 @@ for directory in to_make:
         os.makedirs(directory)
     
 
-fileText=os.path.join(root, fileName)
+fileText=os.path.join(inputDir, fileName)
 
 
 
         
 
    
-def splitData():
+def splitData(fileText=fileText):
     '''
     split the dataset into 3 sets : train, valid and test
     '''
     
     #count the number of lines, and compute the indexes of the start/end of train/valid/test dataset
-    with open(inputDir +  fileName ) as file:
+    with open(fileText) as file:
         widgets = ['counting lines....: ', Percentage(), ' ', Bar(marker='0',left='[',right=']'),
            ' ', ETA(), ' ', FileTransferSpeed()]
         pbar = ProgressBar(widgets=widgets)
@@ -69,7 +69,7 @@ def splitData():
      
     #split the dataset according to 70% training / 20% validation / 10% test
     
-    with open(inputDir +  fileName ) as file:
+    with open(fileText) as file:
         i=0
         training_lines=0
         valid_lines=0
