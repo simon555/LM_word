@@ -6,8 +6,13 @@ import pickle
 import matplotlib.pyplot as pl
 import numpy as np
 from nltk.tokenize import sent_tokenize, word_tokenize
-
+from progressbar import *              
 import argparse
+
+
+widgets = ['Text Analyze: ', Percentage(), ' ', Bar(marker='0',left='[',right=']'),
+           ' ', ETA(), ' ', FileTransferSpeed()] #see docs for other options
+
 
 parser = argparse.ArgumentParser()
 
@@ -89,6 +94,8 @@ def analyze(fileText, outputDir=outputDir):
     '''
     Analyze the stats of the dataset, output samples using the special append
     '''
+    pbar = ProgressBar(widgets=widgets)
+    pbar.start()
     with open(fileText,'r+') as file:
         numberOfArticle=0
         numberOfSentences=0
@@ -110,7 +117,7 @@ def analyze(fileText, outputDir=outputDir):
         numberOfCharPerArticle=[]
         meanNumberOfCharPerArticle=0
         
-        for article in file.readlines():
+        for article in pbar(file.readlines()):
             numberOfArticle+=1                       
             sent_tokenize_list = sent_tokenize(article)
             specialAppend(numberOfSentencePerArticle,len(sent_tokenize_list))
@@ -131,6 +138,8 @@ def analyze(fileText, outputDir=outputDir):
                 tmp_numberOfCharPerSentence=0
 
                 for word in word_tokenize_list:
+                    #pbar.update(i) #this adds a little symbol at each iteration
+                    
                     numberOfWords+=1
                     numberOfChar+=len(word)
                     meanNumberOfCharPerWord= ( len(word) + meanNumberOfCharPerWord * (numberOfWords - 1) ) / numberOfWords
@@ -148,7 +157,6 @@ def analyze(fileText, outputDir=outputDir):
         
             specialAppend(numberOfCharPerArticle,tmp_numberOfCharPerArticle)
             meanNumberOfCharPerArticle = ( tmp_numberOfCharPerArticle + meanNumberOfCharPerArticle * (numberOfArticle - 1) ) / numberOfArticle
-
             
     
     stats={'numberOfArticles':numberOfArticle,

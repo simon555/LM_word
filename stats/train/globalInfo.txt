@@ -1,0 +1,13 @@
+number of articles	12000
+number of sentences	29575
+number of words	531505
+number of chars	2245436
+ 
+mean number of chars per word	4.2246752147204925
+mean number of chars per sentence	75.9234488588334
+mean number of chars per article	187.11966666666643
+ 
+mean number of word per sentence	17.971428571428532
+mean number of word per article	44.29208333333337
+ 
+mean number of sentence per article	2.464583333333339
