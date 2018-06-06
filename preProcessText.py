@@ -27,9 +27,11 @@ else:
 infoDir='./stats/{}/'.format(DatasetName)
 fileText= inputDir + fileName
 
+outputDir_train = outputDir + 'train/'
+outputDir_valid = outputDir + 'valid/'
+outputDir_test = outputDir + 'test/'
 
-
-to_make=[infoDir, outputDir]
+to_make=[infoDir, outputDir_train, outputDir_valid, outputDir_test]
 
 for directory in to_make:
     if not os.path.exists(directory):
@@ -79,16 +81,16 @@ def splitData(fileText=fileText):
         for line in pbar(file.readlines()):
             if i<trainMaxIndex:
                 training_lines+=1
-                with open(outputDir + 'train.txt', 'a') as outstream:
+                with open(outputDir_train + 'train.txt', 'a') as outstream:
                     outstream.write(line) 
             elif trainMaxIndex<i and i < validMaxIndex :
                 valid_lines+=1
-                with open(outputDir + 'valid.txt', 'a') as outstream:
+                with open(outputDir_valid + 'valid.txt', 'a') as outstream:
                     outstream.write(line) 
                     
             elif validMaxIndex < i :
                 test_lines+=1
-                with open(outputDir + 'test.txt', 'a') as outstream:
+                with open(outputDir_test + 'test.txt', 'a') as outstream:
                     outstream.write(line)            
             i+=1
         with open(infoDir + 'line_count.txt', 'a') as outstream:
@@ -114,4 +116,14 @@ def cleanData(fileText):
         for row in reader:
             article = row['EssayText']               
             with open(outputDir + 'clean/', 'a') as outstream:
-                outstream.write(article + '\n')    
+                outstream.write(article + '\n')   
+                
+                
+def build_final_dataset():
+    '''
+    build the vocab of the model based on the training set
+    modify the valid and test set, including a <unk> character
+    '''
+
+    return(0)
+    
