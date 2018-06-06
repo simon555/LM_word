@@ -11,8 +11,6 @@ from progressbar import *
 
 
 
-fileName=args.fileName+args.extension
-root=args.root
 
 if os.name=='nt':
     inputDir='./data/clean/'
