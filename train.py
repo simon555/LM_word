@@ -4,12 +4,17 @@ from model import LanguageModel
 import numpy as np
 import tensorflow as tf
 import time as time
+import os
 
 tf.logging.set_verbosity(tf.logging.ERROR)
 
-data_dir = '/mnt/raid1/billion-word-corpus/1-billion-word-language-modeling-benchmark/training-monolingual.tokenized.shuffled/'
-valid_data_dir = '/mnt/raid1/billion-word-corpus/1-billion-word-language-modeling-benchmark/heldout-monolingual.tokenized.shuffled/'
-save_dir = '/home/ab455/language-model/checkpoints/'
+data_dir = './data/train/'
+valid_data_dir = './data/valid/'
+save_dir = './checkpoints/'
+if not os.path.exists(save_dir):
+    os.makedirs(save_dir)
+
+
 num_words = None
 
 seq_len = 25
@@ -55,7 +60,7 @@ for epoch in range(num_epochs):
     tokens = 0.
     count = 0
     if epoch % eval_softmax == 0:
-        print '\n\nEstimating validation perplexity...'
+        print ('\n\nEstimating validation perplexity...')
         if epoch == 0:
             n_valid_batches = 0
         else:
@@ -70,4 +75,4 @@ for epoch in range(num_epochs):
             valid_logprob += log_prob
             tokens += n_tokens
         valid_perp = np.exp(-valid_logprob/tokens)
-        print '\nValidation Perplexity: ' + str(valid_perp) + '\n'
+        print ('\nValidation Perplexity: ' + str(valid_perp) + '\n')

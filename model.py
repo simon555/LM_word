@@ -17,15 +17,20 @@ class LanguageModel(object):
         self.embed_size = params['embed_size']
         self.hidden_dim = params['hidden_dim']
         self.num_layers = params['num_layers']
+        
+        
+        
         with tf.device('/gpu:0'):
             # Set up the input placeholder
             self.input_seq = tf.placeholder(tf.float32, shape=[None, self.seq_len])
             # Build the RNN
             self.rnn = Embedding(self.vocab_size + 1, self.embed_size, input_length=self.seq_len)(self.input_seq)
+
         with tf.device('/gpu:1'):
             for l in range(self.num_layers):
-                self.rnn = LSTM(output_dim=self.hidden_dim, return_sequences=True, name='rnn_1')(self.rnn)
-            rnn_output = tf.unpack(self.rnn, axis=1)
+
+                self.rnn = LSTM(units=self.hidden_dim, return_sequences=True, name='rnn_1')(self.rnn)
+            rnn_output = tf.unstack(self.rnn, num=self.input_seq.shape[1], axis=1)
             self.w_proj = tf.Variable(tf.zeros([self.vocab_size, self.hidden_dim]))
             self.b_proj = tf.Variable(tf.zeros([self.vocab_size]))
             self.output_seq = tf.placeholder(tf.int64, shape=([None, self.seq_len]))
@@ -42,6 +47,9 @@ class LanguageModel(object):
             self.output = outputs
             self.loss = tf.reduce_mean(self.step_losses)
             self.softmax = tf.nn.softmax(self.output)
+            
+            
+            
     def compile(self,lr=1e-3):
         self.loss_function = tf.reduce_mean(self.loss)
         self.opt = tf.train.AdamOptimizer(lr).minimize(self.loss_function)
@@ -71,6 +79,9 @@ class LanguageModel(object):
                     log_prob += np.log(correct_prob)
                     n_tokens += 1.
         return log_prob, n_tokens
+    
+    
+    
     def generate(self,seed='',temperature=1.0):
         pass
     def save(self,save_path='./'):

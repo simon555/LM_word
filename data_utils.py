@@ -5,8 +5,14 @@ from keras.preprocessing.text import Tokenizer
 from keras.utils.np_utils import to_categorical
 from keras.preprocessing.sequence import pad_sequences
 from keras.utils import generic_utils
-
 import pickle
+
+
+
+
+
+
+
 
 class DataGenerator(object):
     def __init__(self,data_dir):
@@ -29,7 +35,7 @@ class Dataset(object):
         self.token = Tokenizer(nb_words=num_words, lower=True, split=' ')
         print('Reading files...')
         self.token.fit_on_texts(self.texts)
-        self.vocab_size = len(self.token.word_index)
+        self.vocab_size = len(self.token.word_index)+1
         if num_words is not None:
             self.vocab_size = num_words
         self.batch_size = batch_size
