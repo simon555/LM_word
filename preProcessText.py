@@ -21,7 +21,7 @@ if os.name=='nt':
 else:
     inputDir='/mnt/raid1/text/big_files/'
     DatasetName='springer_cui_tokenized'
-    fileName='springer_cui_tokenized.txt'
+    fileName='    .txt'
     outputDir='/mnt/raid1/text/big_files/splitted/{}/'.format(DatasetName)
     
 infoDir='./stats/{}/'.format(DatasetName)

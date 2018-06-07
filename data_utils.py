@@ -11,9 +11,6 @@ import pickle
 
 
 
-
-
-
 class DataGenerator(object):
     def __init__(self,data_dir):
         self.file_list = os.listdir(data_dir)
@@ -32,7 +29,7 @@ class Dataset(object):
         self.file_list = os.listdir(data_dir)
         self.data_dir = data_dir
         self.texts = DataGenerator(data_dir)
-        self.token = Tokenizer(nb_words=num_words, lower=True, split=' ')
+        self.token = Tokenizer(nb_words=num_words, lower=True, split=' ', oov_token=True)
         print('Reading files...')
         self.token.fit_on_texts(self.texts)
         self.vocab_size = len(self.token.word_index)+1
@@ -53,6 +50,7 @@ class Dataset(object):
                         Y_batch = pad_sequences(Y_batch,maxlen=self.seq_len)
                         lines = []
                         yield X_batch,Y_batch
+                        
                     else:
                         lines.append(line)
     def set_batch_size(self,batch_size):

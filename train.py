@@ -11,14 +11,17 @@ tf.logging.set_verbosity(tf.logging.ERROR)
 
 if os.name=='nt':
     #running on my local windows machine for debug
-    data_dir = './data/train/'
-    valid_data_dir = './data/valid/'
+    data_dir = './data/splitted/smallData/valid/'
+    valid_data_dir = './data/splitted/smallData/test/'
+    datasetName='smallData'
 else:
     #running on GPU server
-    data_dir = '/mnt/raid1/text/big_files/train/'
-    valid_data_dir = '/mnt/raid1/text/big_files/valid/'
+    data_dir = '/mnt/raid1/text/big_files/splitted/springer_cui_tokenized/train/'
+    valid_data_dir = '/mnt/raid1/text/big_files/splitted/springer_cui_tokenized/valid/'
+    datasetName='springer_cui_tokenized'
     
-    
+
+dataset_specific_info='./stats/{}/'.format(datasetName)
 save_dir = './checkpoints/'
 if not os.path.exists(save_dir):
     os.makedirs(save_dir)
@@ -37,7 +40,7 @@ num_layers = 1
 dataset = Dataset(data_dir,num_words)
 dataset.set_batch_size(batch_size)
 dataset.set_seq_len(seq_len)
-dataset.save('./checkpoints/')
+dataset.save(dataset_specific_info)
 
 params = {}
 params['vocab_size'] = dataset.vocab_size
@@ -55,6 +58,7 @@ for epoch in range(num_epochs):
     dataset.set_data_dir(data_dir)
     dataset.set_batch_size(batch_size)
     progbar = generic_utils.Progbar(dataset.token.document_count)
+    
     for X_batch,Y_batch in dataset:
         t0 = time.time()
         loss = model.train_on_batch(X_batch,Y_batch)

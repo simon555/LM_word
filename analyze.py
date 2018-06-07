@@ -3,6 +3,8 @@
 
 import os
 import pickle
+import matplotlib as mpl
+mpl.use('Agg')
 import matplotlib.pyplot as pl
 import numpy as np
 
@@ -20,13 +22,16 @@ widgets = ['Text Analyze: ', Percentage(), ' ', Bar(marker='0',left='[',right=']
 
 parser = argparse.ArgumentParser()
 
-parser.add_argument("-root", default = './data/train/', help="directory where the dataset lays", type=str)
+parser.add_argument("-root", default = './data/splitted/smallData/train/', help="directory where the dataset lays", type=str)
 
 parser.add_argument("-fileName", default="train", type=str)
 parser.add_argument("-extension", default=".txt", type=str)
 
-parser.add_argument("-Nsamples", default=1000, type=int)
+parser.add_argument("-Nsamples", default=100000, type=int)
 parser.add_argument("-bins", default=50, type=int)
+parser.add_argument("-Pkeep", default=0.5, type=float)
+
+
 
 
 
@@ -42,6 +47,8 @@ if not os.path.exists(outputDir):
     
 Nsamples=args.Nsamples
 bins=args.bins
+p_keep=args.Pkeep    
+
 endOfSentence= ['.', '!', '?']
 fileText=os.path.join(root, fileName)
 
@@ -91,37 +98,41 @@ def analyze(fileText, outputDir=outputDir):
         meanNumberOfCharPerArticle=0
         
         for article in pbar(file.readlines()):
-            numberOfArticle+=1                       
-            sent_tokenize_list = sent_tokenize(article)
-            specialAppend(numberOfSentencePerArticle,len(sent_tokenize_list))
-            meanNumberOfSentencePerArticle = ( len(sent_tokenize_list) + meanNumberOfSentencePerArticle * (numberOfArticle - 1) ) / numberOfArticle
-            
-            tmp_numberOfWordPerArticle=0
-            tmp_numberOfCharPerArticle=0
-            
-            for sentence in sent_tokenize_list:
-                numberOfSentences+=1
-
-                word_tokenize_list=word_tokenize(sentence)
-                specialAppend(numberOfWordPerSentence,len(word_tokenize_list))
-                meanNumberOfWordPerSentence = ( len(word_tokenize_list) + meanNumberOfWordPerSentence * (numberOfSentences - 1) ) / numberOfSentences
-
-                tmp_numberOfWordPerArticle+=len(word_tokenize_list)
+            dice=np.random.random()
+            if dice>p_keep:
+                continue
+            else:
+                numberOfArticle+=1                       
+                sent_tokenize_list = sent_tokenize(article)
+                specialAppend(numberOfSentencePerArticle,len(sent_tokenize_list))
+                meanNumberOfSentencePerArticle = ( len(sent_tokenize_list) + meanNumberOfSentencePerArticle * (numberOfArticle - 1) ) / numberOfArticle
                 
-                tmp_numberOfCharPerSentence=0
-
-                for word in word_tokenize_list:
-                    #pbar.update(i) #this adds a little symbol at each iteration
+                tmp_numberOfWordPerArticle=0
+                tmp_numberOfCharPerArticle=0
+                
+                for sentence in sent_tokenize_list:
+                    numberOfSentences+=1
+    
+                    word_tokenize_list=word_tokenize(sentence)
+                    specialAppend(numberOfWordPerSentence,len(word_tokenize_list))
+                    meanNumberOfWordPerSentence = ( len(word_tokenize_list) + meanNumberOfWordPerSentence * (numberOfSentences - 1) ) / numberOfSentences
+    
+                    tmp_numberOfWordPerArticle+=len(word_tokenize_list)
                     
-                    numberOfWords+=1
-                    numberOfChar+=len(word)
-                    meanNumberOfCharPerWord= ( len(word) + meanNumberOfCharPerWord * (numberOfWords - 1) ) / numberOfWords
-
-                    specialAppend(numberOfCharPerWord,len(word))
-                    tmp_numberOfCharPerSentence+=len(word)
-                    tmp_numberOfCharPerArticle+=len(word)
-                specialAppend(numberOfCharPerSentence,tmp_numberOfCharPerSentence)
-                meanNumberOfCharPerSentence= ( tmp_numberOfCharPerSentence + meanNumberOfCharPerSentence * (numberOfSentences - 1) ) / numberOfSentences
+                    tmp_numberOfCharPerSentence=0
+    
+                    for word in word_tokenize_list:
+                        #pbar.update(i) #this adds a little symbol at each iteration
+                        
+                        numberOfWords+=1
+                        numberOfChar+=len(word)
+                        meanNumberOfCharPerWord= ( len(word) + meanNumberOfCharPerWord * (numberOfWords - 1) ) / numberOfWords
+    
+                        specialAppend(numberOfCharPerWord,len(word))
+                        tmp_numberOfCharPerSentence+=len(word)
+                        tmp_numberOfCharPerArticle+=len(word)
+                    specialAppend(numberOfCharPerSentence,tmp_numberOfCharPerSentence)
+                    meanNumberOfCharPerSentence= ( tmp_numberOfCharPerSentence + meanNumberOfCharPerSentence * (numberOfSentences - 1) ) / numberOfSentences
 
                 
             specialAppend(numberOfWordPerArticle,tmp_numberOfWordPerArticle)
@@ -199,10 +210,9 @@ def display(dataFile=outputDir + 'dataStats.pkl' , outputDir=outputDir, bins=bin
     numberOfCharPerWord=data['numberOfCharPerWord']
 
     figure=pl.figure(0)
-    pl.hist(numberOfCharPerWord)
-    pl.title('number of characters per word')
-    pl.xlabel('word occurence')
-    pl.ylabel('number of character')    
+    pl.hist(numberOfCharPerWord,bins=bins)
+    pl.title('stats per word')
+    pl.ylabel('#char')    
     pl.savefig(outputDir + 'statsPerWord.png') 
     
     
@@ -215,16 +225,14 @@ def display(dataFile=outputDir + 'dataStats.pkl' , outputDir=outputDir, bins=bin
     pl.subplot(211)
     pl.hist(numberOfCharPerSentence, bins=bins)
     pl.title('stats per sentence')
-    pl.xlabel('sentence occurence')
-    pl.ylabel('number of character')   
+    pl.ylabel('#char')   
     
     
     
     
     pl.subplot(212)
     pl.hist(numberOfWordPerSentence, bins=bins)
-    pl.xlabel('sentence occurence')
-    pl.ylabel('number of words')   
+    pl.ylabel('#word')   
     
     pl.savefig(outputDir + 'statsPerSentence.png') 
     
@@ -239,21 +247,18 @@ def display(dataFile=outputDir + 'dataStats.pkl' , outputDir=outputDir, bins=bin
     pl.subplot(311)
     pl.hist(numberOfCharPerArticle, bins=bins)
     pl.title('stats per article')
-    pl.xlabel('article occurence')
-    pl.ylabel('#character')   
+    pl.ylabel('#char')   
     
     
     
     
     pl.subplot(312)
     pl.hist(numberOfWordPerArticle, bins=bins)
-    pl.xlabel('sentence occurence')
     pl.ylabel('#words')   
     
     pl.subplot(313)
     pl.hist(numberOfSentencePerArticle, bins=bins)
-    pl.xlabel('sentence occurence')
-    pl.ylabel('#sentences') 
+    pl.ylabel('#sentence') 
     
     pl.savefig(outputDir + 'statsPerArticle.png') 
     
