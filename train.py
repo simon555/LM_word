@@ -5,6 +5,7 @@ import numpy as np
 import tensorflow as tf
 import time as time
 import os
+from progressbar import Percentage, Bar, FileTransferSpeed, ETA, ProgressBar
 
 tf.logging.set_verbosity(tf.logging.ERROR)
 
@@ -30,8 +31,8 @@ if not os.path.exists(save_dir):
 num_words = None
 
 seq_len = 25
-batch_size = 192
-valid_batch_size = 16 ## Needs to be smaller due to memory issues
+batch_size = 64
+valid_batch_size = 64 ## Needs to be smaller due to memory issues
 embed_size = 128
 num_epochs = 20
 hidden_size = 256
@@ -46,6 +47,7 @@ params = {}
 params['vocab_size'] = dataset.vocab_size
 params['num_classes'] = dataset.vocab_size
 params['batch_size'] = batch_size
+params['valid_batch_size'] = valid_batch_size
 params['seq_len'] = seq_len
 params['hidden_dim'] = hidden_size
 params['num_layers'] = num_layers
@@ -60,6 +62,10 @@ for epoch in range(num_epochs):
     progbar = generic_utils.Progbar(dataset.token.document_count)
     
     for X_batch,Y_batch in dataset:
+#        if X_batch.shape[0]<batch_size:
+#            print('early stop batch size : ', X_batch.shape[0])
+#            continue
+        
         t0 = time.time()
         loss = model.train_on_batch(X_batch,Y_batch)
         perp = np.exp(np.float32(loss))
@@ -76,13 +82,15 @@ for epoch in range(num_epochs):
         print ('\n\nEstimating validation perplexity...')
         if epoch == 0:
             n_valid_batches = 0
-        else:
-            progbar = generic_utils.Progbar(n_valid_batches)
-        for X_batch, Y_batch in dataset:
+        
+        widgets = ['Validation perplexity....: ', Percentage(), ' ', Bar(marker='0',left='[',right=']'),
+           ' ', ETA(), ' ', FileTransferSpeed()]
+        pbar = ProgressBar(widgets=widgets)
+        pbar.start()
+        for X_batch, Y_batch in pbar(dataset):
             if epoch == 0:
                 n_valid_batches += 1
-            else:
-                progbar.add(1)
+            
             log_prob, n_tokens = model.evaluate(X_batch, Y_batch)
             count += 1
             valid_logprob += log_prob
