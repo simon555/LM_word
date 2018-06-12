@@ -34,9 +34,7 @@ class Dataset(object):
         self.token.fit_on_texts(self.texts)
         self.vocab_size = len(self.token.word_index)+1
         
-        #stops too big models
-        if self.vocab_size > 10000:
-            num_words=10000        
+             
         
         if num_words is not None:
             self.vocab_size = num_words
