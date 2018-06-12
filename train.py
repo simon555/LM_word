@@ -9,6 +9,7 @@ from progressbar import Percentage, Bar, FileTransferSpeed, ETA, ProgressBar
 
 tf.logging.set_verbosity(tf.logging.ERROR)
 
+tf.summary.FileWriterCache.clear()
 
 if os.name=='nt':
     #running on my local windows machine for debug
@@ -40,20 +41,21 @@ else:
         
 directoryCkpt=directoryOut+'checkpoint/'
 directoryData=directoryOut+'data/'
-    
-
+directoryOutLogs=directoryOut + 'logs/'
+        
 os.makedirs(directoryOut) 
 os.makedirs(directoryData)
 os.makedirs(directoryCkpt)
+os.makedirs(directoryOutLogs)
 
 num_words = None
 
 seq_len = 25
-batch_size = 64
-valid_batch_size = 64 ## Needs to be smaller due to memory issues
-embed_size = 128
+batch_size = 16
+valid_batch_size = 16 ## Needs to be smaller due to memory issues
+embed_size = 64
 num_epochs = 20
-hidden_size = 256
+hidden_size = 64
 num_layers = 1
 
 dataset = Dataset(data_dir,num_words)
@@ -62,7 +64,9 @@ dataset.set_seq_len(seq_len)
 dataset.save(dataset_specific_info)
 
 params = {}
-params['vocab_size'] = dataset.vocab_size
+
+#take account of the 0 token for padding
+params['vocab_size'] = dataset.vocab_size + 1
 params['num_classes'] = dataset.vocab_size
 params['batch_size'] = batch_size
 params['valid_batch_size'] = valid_batch_size
@@ -70,6 +74,8 @@ params['seq_len'] = seq_len
 params['hidden_dim'] = hidden_size
 params['num_layers'] = num_layers
 params['embed_size'] = embed_size
+params['directoryOutLogs'] = directoryOutLogs
+
 
 model = LanguageModel(params)
 model.compile()

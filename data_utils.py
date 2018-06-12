@@ -33,6 +33,11 @@ class Dataset(object):
         print('Reading files...')
         self.token.fit_on_texts(self.texts)
         self.vocab_size = len(self.token.word_index)+1
+        
+        #stops too big models
+        if self.vocab_size > 10000:
+            num_words=10000        
+        
         if num_words is not None:
             self.vocab_size = num_words
         self.batch_size = batch_size
@@ -68,3 +73,6 @@ class Dataset(object):
             pickle.dump(self.token.word_docs, handle, protocol=pickle.HIGHEST_PROTOCOL)
         with open(save_path + 'word_index.pickle', 'wb') as handle:
             pickle.dump(self.token.word_index, handle, protocol=pickle.HIGHEST_PROTOCOL)
+        with open(save_path + 'vocab_size.txt', 'w') as outstream:
+            outstream.write('number of words in vocab : {}'.format(len(self.token.word_counts)))
+            

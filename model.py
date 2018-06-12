@@ -8,8 +8,9 @@ import time
 
 class LanguageModel(object):
     def __init__(self,params):
-        config = tf.ConfigProto(allow_soft_placement=True)
+        config = tf.ConfigProto(allow_soft_placement=True, log_device_placement=True)
         self.sess = tf.Session(config = config)
+
         K.set_session(self.sess)
         # Pull out all of the parameters
         self.batch_size = params['batch_size']
@@ -19,9 +20,12 @@ class LanguageModel(object):
         self.embed_size = params['embed_size']
         self.hidden_dim = params['hidden_dim']
         self.num_layers = params['num_layers']
+        self.directoryOutLogs=params['directoryOutLogs']
         self.mode='train'
         self.LSTM=LSTM(units=self.hidden_dim, return_sequences=True, name='rnn_1', stateful=True)
         self.initializerDone=False
+                
+
 
    
     
@@ -32,7 +36,7 @@ class LanguageModel(object):
             self.input_seq = tf.placeholder(tf.float32, shape=[self.batch_size, self.seq_len])
          
             # Build the RNN
-            self.rnn = Embedding(self.vocab_size + 1, self.embed_size, input_length=self.seq_len, mask_zero=True)(self.input_seq)
+            self.rnn = Embedding(self.vocab_size, self.embed_size, input_length=self.seq_len, mask_zero=True)(self.input_seq)
 
         with tf.device('/gpu:1'):
             for l in range(self.num_layers):
@@ -59,12 +63,18 @@ class LanguageModel(object):
             
     def compile(self,lr=1e-3):
         self.loss_function = tf.reduce_mean(self.loss)
+        #loss_scalar = tf.summary.scalar("loss",self.loss_function)
         self.opt = tf.train.AdamOptimizer(lr).minimize(self.loss_function)
+        #self.train_writer = tf.summary.FileWriter( self.directoryOutLogs, self.sess.graph)
+
         self.sess.run(tf.initialize_all_variables())
+        
+        
     def train_on_batch(self,X_batch,Y_batch):
         #self.opt.run(session=self.sess,feed_dict={self.input_seq: X_batch, self.output_seq: Y_batch})
 
         self.reInitialize_LSTM_hidden()
+
         
         batch_time_length=len(X_batch[0])
         if batch_time_length % self.seq_len != 0 : 
@@ -75,13 +85,18 @@ class LanguageModel(object):
         start_index=0
         end_index=min(batch_time_length,self.seq_len)
         loss_value=0
+        #merged = tf.summary.merge_all()
+
         for chunk_no in range(number_of_chunks):
             X_input=X_batch[:,start_index:end_index]
-            Y_input=Y_batch[:,start_index:end_index]        
+            Y_input=Y_batch[:,start_index:end_index]
+
             _, tmp_loss_value = self.sess.run([self.opt, self.loss],feed_dict={self.input_seq: X_input, self.output_seq: Y_input})
+            #self.train_writer.add_summary(summary)
             loss_value+=tmp_loss_value
             start_index=end_index
             end_index=min(batch_time_length, end_index + self.seq_len )
+        
         
         return loss_value
     
@@ -111,9 +126,8 @@ class LanguageModel(object):
         preds = np.swapaxes(preds, 0, 1)
         #preds=preds[:self.valid_batch_size]
         
-
-        log_prob = 0.
-        n_tokens = 0.
+        log_prob=0
+        n_tokens=0
         
         ## Note we're only going to use the non-zero entries ##
         for i in range(len(X)):
@@ -122,6 +136,7 @@ class LanguageModel(object):
                     correct_prob = preds[i,j,Y[i,j]]
                     log_prob += np.log(correct_prob)
                     n_tokens += 1.
+      
         return log_prob, n_tokens
     
     
