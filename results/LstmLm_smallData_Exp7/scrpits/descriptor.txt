@@ -1,0 +1,35 @@
+experience done on : 18/06/2018 at 16:52:18  
+     dataset     smallData 
+ Nexperience             7 
+  vocab_size           100 
+     maxnorm             0 
+serverVisdom  http://localhost 
+         eps         1e-08 
+directoryScripts  C:\Users\simon\Desktop\HMS\projects\LM_word\results\LstmLm_smallData_Exp7\scrpits 
+       optim          Adam 
+          b1           0.9 
+     nlayers             1 
+directoryOut  C:\Users\simon\Desktop\HMS\projects\LM_word\results\LstmLm_smallData_Exp7 
+       Nplot           100 
+         vis             1 
+    dataPath  C://Users//simon//Desktop//HMS//projects//LM_word//data//splitted//smallData//  
+       devid            -1 
+         lrd          0.25 
+          lr          0.01 
+      epochs             1 
+       model        LstmLm 
+  portVisdom          8097 
+        nhid            10 
+          b2         0.999 
+directoryCkpt  C:\Users\simon\Desktop\HMS\projects\LM_word\results\LstmLm_smallData_Exp7\checkpoint 
+       nonag             0 
+          wd        0.0001 
+        cuda             1 
+     dropout             0 
+         bsz            32 
+directoryData  C:\Users\simon\Desktop\HMS\projects\LM_word\results\LstmLm_smallData_Exp7\data 
+        clip             5 
+  tieweights             1 
+        bptt            25 
+          dm             0 
+         mom          0.99 

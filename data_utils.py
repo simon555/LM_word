@@ -34,8 +34,7 @@ class Dataset(object):
         self.token.fit_on_texts(self.texts)
         self.vocab_size = len(self.token.word_index)+1
         
-             
-        
+              
         if num_words is not None:
             self.vocab_size = num_words
         self.batch_size = batch_size

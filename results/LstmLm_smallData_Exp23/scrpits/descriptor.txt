@@ -1,0 +1,35 @@
+experience done on : 19/06/2018 at 17:13:01  
+  vocab_size             0 
+directoryCkpt  C:\Users\simon\Desktop\HMS\projects\LM_word\results\LstmLm_smallData_Exp23\checkpoint 
+         lrd          0.25 
+directoryData  C:\Users\simon\Desktop\HMS\projects\LM_word\results\LstmLm_smallData_Exp23\data 
+     dropout             0 
+         vis             1 
+         mom          0.99 
+directoryScripts  C:\Users\simon\Desktop\HMS\projects\LM_word\results\LstmLm_smallData_Exp23\scrpits 
+         bsz            32 
+       model        LstmLm 
+directoryOut  C:\Users\simon\Desktop\HMS\projects\LM_word\results\LstmLm_smallData_Exp23 
+       nonag             0 
+      epochs             1 
+  tieweights             1 
+          b2         0.999 
+    dataPath  C://Users//simon//Desktop//HMS//projects//LM_word//data//splitted//smallData//  
+        bptt            25 
+       Nplot           100 
+          b1           0.9 
+        cuda             1 
+          dm             0 
+     nlayers             1 
+       optim          Adam 
+     dataset     smallData 
+          lr          0.01 
+  portVisdom          8097 
+     maxnorm             0 
+        clip             5 
+        nhid            10 
+ Nexperience            23 
+          wd        0.0001 
+       devid            -1 
+         eps         1e-08 
+serverVisdom  http://localhost 

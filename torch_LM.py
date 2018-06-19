@@ -1,0 +1,225 @@
+# -*- coding: utf-8 -*-
+
+
+import argparse
+
+import torch
+import torch.nn as nn
+import torch.optim as optim
+import torch.nn.functional as F
+import pickle
+from torch.autograd import Variable as V
+from torch.nn import Parameter
+from torch.nn.utils import clip_grad_norm
+import os
+import torchtext
+import time
+from tqdm import tqdm
+import random
+import sys
+import math
+from arguments import get_args
+from local_models import lstm
+
+# =============================================================================
+# summarizing the arguments for this experiment
+# =============================================================================
+args = get_args()
+
+
+random.seed(1111)
+torch.manual_seed(1111)
+if args.devid >= 0:
+    torch.cuda.manual_seed_all(1111)
+    torch.backends.cudnn.enabled = False
+    print("Cudnn is enabled: {}".format(torch.backends.cudnn.enabled))
+
+
+# =============================================================================
+# load the data
+# =============================================================================
+#load raw data
+TEXT = torchtext.data.Field()
+train, valid, test = torchtext.datasets.LanguageModelingDataset.splits(
+    path=os.path.join(os.getcwd(),'data','splitted','smallData'),
+    train="train.txt", validation="valid.txt", test="valid.txt", text_field=TEXT)
+    #path="data/",
+    #train="train.txt", validation="valid.txt", test="test.txt", text_field=TEXT)
+
+#build vocab
+TEXT.build_vocab(train, max_size=args.vocab_size if args.vocab_size is not False else None )
+padidx = TEXT.vocab.stoi["<pad>"]
+
+#build data iterators
+train_iter, valid_iter, test_iter = torchtext.data.BPTTIterator.splits(
+    (train, valid, test), batch_size=args.bsz, device=args.devid, bptt_len=args.bptt, repeat=False)
+
+
+
+# =============================================================================
+# Build the output directories for this experiment
+# =============================================================================
+
+Nexperience=1
+
+directoryOut = os.path.join(os.getcwd(), 'results', '{}_{}_Exp{}'.format(args.model,args.dataset,Nexperience))
+    
+if not os.path.exists(directoryOut):
+    print('new directory : ',directoryOut)        
+else:
+    while(os.path.exists(directoryOut)):
+        print('directory already exists : ',directoryOut)
+        Nexperience+=1
+        directoryOut = os.path.join(os.getcwd(), 'results', '{}_{}_Exp{}'.format(args.model,args.dataset,Nexperience))
+    print('new directory : ',directoryOut)
+        
+directoryCkpt=os.path.join(directoryOut,'checkpoint')
+directoryData=os.path.join(directoryOut,'data')
+directoryScripts=os.path.join(directoryOut, 'scrpits')
+        
+os.makedirs(directoryOut) 
+os.makedirs(directoryData)
+os.makedirs(directoryCkpt)
+os.makedirs(directoryScripts)
+
+#add these info the the args file
+d=vars(args)
+d['directoryOut']=directoryOut
+d['directoryData']=directoryData
+d['directoryCkpt']=directoryCkpt
+d['directoryScripts']=directoryScripts
+
+d['Nexperience']=Nexperience
+
+# =============================================================================
+# save the scripts to rerun this experiment
+# =============================================================================
+#save the model scripts
+if os.name=='nt':
+    root='copy '
+else:
+    root='cp '
+
+commandBash = root + os.path.join(os.getcwd(),'local_models','lstm.py')
+commandBash += ' '
+commandBash += os.path.join(directoryScripts, 'model.py')   
+    
+check=os.system(commandBash)
+if check==1:
+    print(commandBash)
+    sys.exit("ERROR, model not copied")
+    
+#save the arguments scripts, as well as the descriptor of the experiment
+commandBash = root + os.path.join(os.getcwd(),'arguments.py')
+commandBash += ' '
+commandBash += os.path.join(directoryScripts, 'arguments.py')   
+
+
+
+    
+check=os.system(commandBash)
+if check==1:
+    print(commandBash)
+    sys.exit("ERROR, argument script not copied")
+    
+    
+descriptor=''
+for i in vars(args):
+    #print(i, getattr(args,i))
+    line_new = '{:>12}  {:>12} \n'.format(i, getattr(args,i))
+    descriptor+=line_new
+    #print(line_new)
+print(descriptor)
+time.sleep(5)
+
+with open(os.path.join(directoryScripts, 'descriptor.txt'), 'w') as outstream:
+    outstream.write("experience done on : {} at {}  \n".format(time.strftime("%d/%m/%Y"),time.strftime("%H:%M:%S")))
+    outstream.write(descriptor)
+    
+
+    
+# =============================================================================
+# Define the info to track along the experiment
+# =============================================================================
+infoToPlot={'trainPerp':[],
+            'validPerp':[],
+            'generated':None}
+
+
+# =============================================================================
+# Define the Vizdom visualizer
+# =============================================================================
+if args.vis:
+    from visdom import Visdom
+    print('using VISDOM')
+    #specific to local experiments on windows laptop [Simon]
+   
+    viz = Visdom(server=args.serverVisdom,port=args.portVisdom,env='{}_{}_Exp{}/'.format(args.model,args.dataset,Nexperience))
+    win={'trainPerp':None,
+         'validPerp':None,
+         'input_sentence':None,
+         'expected_sentence':None,
+         'output_sentence':None}
+    #plot a summary of the experiment on visdom
+    winForDescriptor=viz.text(descriptor)
+
+
+
+
+
+
+
+if __name__ == "__main__":
+    
+    #instantiate model
+    model = lstm.LstmLm(args,TEXT.vocab, padidx)
+    
+    print(model)
+    
+    if args.devid >= 0:
+        model.cuda(args.devid)
+
+    # We do not want to give the model credit for predicting padding symbols,
+    # this can decrease ppl a few points.
+    weight = torch.FloatTensor(model.vsize).fill_(1)
+    weight[padidx] = 0
+    if args.devid >= 0:
+        weight = weight.cuda(args.devid)
+    loss = nn.CrossEntropyLoss(weight=V(weight), size_average=False)
+
+
+    #define optimizer
+    params = [p for p in model.parameters() if p.requires_grad]
+    if args.optim == "Adam":
+        optimizer = optim.Adam(
+            params, lr = args.lr, weight_decay = args.wd, betas=(args.b1, args.b2))
+    elif args.optim == "SGD":
+        optimizer = optim.SGD(
+            params, lr = args.lr, weight_decay = args.wd,
+            nesterov = not args.nonag, momentum = args.mom, dampening = args.dm)
+    schedule = optim.lr_scheduler.ReduceLROnPlateau(
+        optimizer, patience=1, factor=args.lrd, threshold=1e-3)
+
+
+    #training loop
+    for epoch in range(args.epochs):
+        print("Epoch {}, lr {}".format(epoch, optimizer.param_groups[0]['lr']))
+        train_loss, train_words = model.train_epoch(
+            iter=train_iter, loss=loss, optimizer=optimizer,infoToPlot=infoToPlot, viz=viz, win=win, TEXT=TEXT)
+        valid_loss, valid_words = model.validate(valid_iter, loss, infoToPlot=infoToPlot, viz=viz, win=win)
+        schedule.step(valid_loss)
+        print("Train: {}, Valid: {}".format(
+            math.exp(train_loss / train_words), math.exp(valid_loss / valid_words)))
+        
+        print('save info...')
+        with open(os.path.join(directoryData,'data.pkl'), 'wb') as f:
+            pickle.dump(infoToPlot, f, pickle.HIGHEST_PROTOCOL)
+
+    #test and save model
+    test_loss, test_words = model.validate(test_iter, loss)
+    print("Test: {}".format(math.exp(test_loss / test_words)))
+    model.generate_predictions(TEXT)
+    print('save model...')
+    model.generationIteratorBuilt=False
+    torch.save(model.cpu().state_dict(), os.path.join(directoryCkpt,model.__class__.__name__ + ".pth"))
+    print('done')
