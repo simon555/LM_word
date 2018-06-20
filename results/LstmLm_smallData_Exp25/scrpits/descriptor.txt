@@ -1,35 +1,35 @@
-experience done on : 19/06/2018 at 17:24:44  
-  vocab_size             0 
-directoryCkpt  C:\Users\simon\Desktop\HMS\projects\LM_word\results\LstmLm_smallData_Exp25\checkpoint 
-         lrd          0.25 
-directoryData  C:\Users\simon\Desktop\HMS\projects\LM_word\results\LstmLm_smallData_Exp25\data 
+experience done on : 20/06/2018 at 15:00:24  
+serverVisdom  http://localhost 
+          lr          0.01 
+     nlayers             1 
+          dm             0 
+        nhid            10 
+         eps         1e-08 
      dropout             0 
-         vis             1 
-         mom          0.99 
-directoryScripts  C:\Users\simon\Desktop\HMS\projects\LM_word\results\LstmLm_smallData_Exp25\scrpits 
+         lrd          0.25 
          bsz            32 
-       model        LstmLm 
+          wd        0.0001 
+        clip             5 
+     dataset     smallData 
+  portVisdom          8097 
+       devid            -1 
+     maxnorm             0 
+ Nexperience            25 
 directoryOut  C:\Users\simon\Desktop\HMS\projects\LM_word\results\LstmLm_smallData_Exp25 
        nonag             0 
-      epochs             1 
+         vis             1 
   tieweights             1 
+      epochs            19 
+directoryScripts  C:\Users\simon\Desktop\HMS\projects\LM_word\results\LstmLm_smallData_Exp25\scrpits 
           b2         0.999 
     dataPath  C://Users//simon//Desktop//HMS//projects//LM_word//data//splitted//smallData//  
-        bptt            25 
-       Nplot           100 
-          b1           0.9 
-        cuda             1 
-          dm             0 
-     nlayers             1 
+directoryCkpt  C:\Users\simon\Desktop\HMS\projects\LM_word\results\LstmLm_smallData_Exp25\checkpoint 
+directoryData  C:\Users\simon\Desktop\HMS\projects\LM_word\results\LstmLm_smallData_Exp25\data 
+         mom          0.99 
        optim          Adam 
-     dataset     smallData 
-          lr          0.01 
-  portVisdom          8097 
-     maxnorm             0 
-        clip             5 
-        nhid            10 
- Nexperience            25 
-          wd        0.0001 
-       devid            -1 
-         eps         1e-08 
-serverVisdom  http://localhost 
+        cuda             1 
+          b1           0.9 
+  vocab_size           100 
+       Nplot           100 
+       model        LstmLm 
+        bptt            25 

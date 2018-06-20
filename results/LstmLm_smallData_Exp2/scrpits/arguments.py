@@ -24,18 +24,18 @@ def get_args():
     parser.add_argument('--cuda', default=True,type= bool) 
     
     parser.add_argument("--devid", type=int, default=-1)
-    parser.add_argument("--vocab_size", type=int, default=False)
+    parser.add_argument("--vocab_size", type=int, default=100)
 
 
     parser.add_argument("--model", choices=["NnLm", "LstmLm"], default="LstmLm")
-    parser.add_argument("--nhid", type=int, default=500)
+    parser.add_argument("--nhid", type=int, default=10)
     parser.add_argument("--nlayers", type=int, default=1)
 
     parser.add_argument("--tieweights", default=True)
     parser.add_argument("--maxnorm", type=float, default=False)
     parser.add_argument("--dropout", type=float, default=0)
 
-    parser.add_argument("--epochs", type=int, default=3)
+    parser.add_argument("--epochs", type=int, default=19)
 
     parser.add_argument("--optim", choices=["SGD", "Adam"], default="Adam")
 

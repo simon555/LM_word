@@ -1,35 +1,35 @@
-experience done on : 19/06/2018 at 14:59:25  
-          b2         0.999 
-          b1           0.9 
-      epochs             1 
-        cuda             1 
-       Nplot           100 
-       devid            -1 
-         lrd          0.25 
-          dm             0 
-serverVisdom  http://localhost 
-directoryOut  C:\Users\simon\Desktop\HMS\projects\LM_word\results\LstmLm_smallData_Exp10 
-    dataPath  C://Users//simon//Desktop//HMS//projects//LM_word//data//splitted//smallData//  
-         vis             1 
+experience done on : 20/06/2018 at 14:14:12  
+  vocab_size           100 
 directoryCkpt  C:\Users\simon\Desktop\HMS\projects\LM_word\results\LstmLm_smallData_Exp10\checkpoint 
+       model        LstmLm 
+          lr          0.01 
+       devid            -1 
+          b2         0.999 
+     maxnorm             0 
+         vis             1 
+       Nplot           100 
+     dataset     smallData 
  Nexperience            10 
-     nlayers             1 
-  vocab_size             0 
-       optim          Adam 
-         mom          0.99 
-         eps         1e-08 
-        nhid            10 
-     dropout             0 
+serverVisdom  http://localhost 
+  portVisdom          8097 
+    dataPath  C://Users//simon//Desktop//HMS//projects//LM_word//data//splitted//smallData//  
+          wd        0.0001 
   tieweights             1 
-         bsz            32 
+        clip             5 
+        nhid            10 
+       optim          Adam 
+          b1           0.9 
+          dm             0 
+     nlayers             1 
+         eps         1e-08 
 directoryScripts  C:\Users\simon\Desktop\HMS\projects\LM_word\results\LstmLm_smallData_Exp10\scrpits 
         bptt            25 
-  portVisdom          8097 
-     dataset     smallData 
+         mom          0.99 
+      epochs            19 
        nonag             0 
-       model        LstmLm 
-     maxnorm             0 
-          lr          0.01 
-        clip             5 
 directoryData  C:\Users\simon\Desktop\HMS\projects\LM_word\results\LstmLm_smallData_Exp10\data 
-          wd        0.0001 
+         lrd          0.25 
+        cuda             1 
+         bsz            32 
+     dropout             0 
+directoryOut  C:\Users\simon\Desktop\HMS\projects\LM_word\results\LstmLm_smallData_Exp10 

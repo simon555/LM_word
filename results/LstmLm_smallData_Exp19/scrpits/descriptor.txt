@@ -1,4 +1,4 @@
-experience done on : 20/06/2018 at 14:41:27  
+experience done on : 20/06/2018 at 14:35:31  
 serverVisdom  http://localhost 
           lr          0.01 
      nlayers             1 
@@ -14,17 +14,17 @@ serverVisdom  http://localhost
   portVisdom          8097 
        devid            -1 
      maxnorm             0 
- Nexperience            22 
-directoryOut  C:\Users\simon\Desktop\HMS\projects\LM_word\results\LstmLm_smallData_Exp22 
+ Nexperience            19 
+directoryOut  C:\Users\simon\Desktop\HMS\projects\LM_word\results\LstmLm_smallData_Exp19 
        nonag             0 
          vis             1 
   tieweights             1 
       epochs            19 
-directoryScripts  C:\Users\simon\Desktop\HMS\projects\LM_word\results\LstmLm_smallData_Exp22\scrpits 
+directoryScripts  C:\Users\simon\Desktop\HMS\projects\LM_word\results\LstmLm_smallData_Exp19\scrpits 
           b2         0.999 
     dataPath  C://Users//simon//Desktop//HMS//projects//LM_word//data//splitted//smallData//  
-directoryCkpt  C:\Users\simon\Desktop\HMS\projects\LM_word\results\LstmLm_smallData_Exp22\checkpoint 
-directoryData  C:\Users\simon\Desktop\HMS\projects\LM_word\results\LstmLm_smallData_Exp22\data 
+directoryCkpt  C:\Users\simon\Desktop\HMS\projects\LM_word\results\LstmLm_smallData_Exp19\checkpoint 
+directoryData  C:\Users\simon\Desktop\HMS\projects\LM_word\results\LstmLm_smallData_Exp19\data 
          mom          0.99 
        optim          Adam 
         cuda             1 

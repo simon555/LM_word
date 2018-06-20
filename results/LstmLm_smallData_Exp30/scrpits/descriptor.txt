@@ -1,35 +1,35 @@
-experience done on : 19/06/2018 at 18:02:52  
-        cuda             1 
-        bptt            25 
-         vis             1 
-         eps         1e-08 
-directoryOut  C:\Users\simon\Desktop\HMS\projects\LM_word\results\LstmLm_smallData_Exp30 
-         lrd          0.25 
-      epochs             1 
-directoryScripts  C:\Users\simon\Desktop\HMS\projects\LM_word\results\LstmLm_smallData_Exp30\scrpits 
-         mom          0.99 
-directoryData  C:\Users\simon\Desktop\HMS\projects\LM_word\results\LstmLm_smallData_Exp30\data 
-         bsz            32 
-        nhid            10 
-  portVisdom          8097 
-        clip             5 
-directoryCkpt  C:\Users\simon\Desktop\HMS\projects\LM_word\results\LstmLm_smallData_Exp30\checkpoint 
-       optim          Adam 
-  tieweights             1 
-       model        LstmLm 
-     dataset     smallData 
-     maxnorm             0 
-  vocab_size           100 
+experience done on : 20/06/2018 at 15:24:38  
        Nplot           100 
-     dropout             0 
-serverVisdom  http://localhost 
-          dm             0 
           lr          0.01 
+       devid            -1 
+          dm             0 
+       model        LstmLm 
+ Nexperience            30 
+        bptt            25 
+         eps         1e-08 
      nlayers             1 
        nonag             0 
+directoryData  C:\Users\simon\Desktop\HMS\projects\LM_word\results\LstmLm_smallData_Exp30\data 
+  tieweights             1 
+       optim          Adam 
           b2         0.999 
- Nexperience            30 
-          b1           0.9 
-    dataPath  C://Users//simon//Desktop//HMS//projects//LM_word//data//splitted//smallData//  
-       devid            -1 
+         vis             1 
+     dataset     smallData 
+         lrd          0.25 
           wd        0.0001 
+directoryOut  C:\Users\simon\Desktop\HMS\projects\LM_word\results\LstmLm_smallData_Exp30 
+        clip             5 
+        cuda             1 
+directoryScripts  C:\Users\simon\Desktop\HMS\projects\LM_word\results\LstmLm_smallData_Exp30\scrpits 
+  portVisdom          8097 
+      epochs            19 
+serverVisdom  http://localhost 
+    dataPath  C://Users//simon//Desktop//HMS//projects//LM_word//data//splitted//smallData//  
+     dropout             0 
+     maxnorm             0 
+         mom          0.99 
+  vocab_size           100 
+directoryCkpt  C:\Users\simon\Desktop\HMS\projects\LM_word\results\LstmLm_smallData_Exp30\checkpoint 
+        nhid            10 
+         bsz            32 
+          b1           0.9 

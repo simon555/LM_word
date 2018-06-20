@@ -9,13 +9,15 @@ import torch.nn.functional as F
 import os
 from torch.autograd import Variable as V
 from torch.nn import Parameter
-from torch.nn.utils import clip_grad_norm
+from torch.nn.utils import clip_grad_norm_
 import numpy as np
 import torchtext
 from torch.autograd import Variable
 from tqdm import tqdm
 import random
 from visualisation import visdom_plot
+import itertools
+
 
 #from local_models.log_uniform.log_uniform import LogUniformSampler
 
@@ -34,7 +36,11 @@ class LstmLm(nn.Module):
         self.tieweights=args.tieweights
         self.vsize = len(vocab.itos)
         self.padidx=padidx
-        self.lut = nn.Embedding(self.vsize, self.nhid, max_norm=args.maxnorm)
+        if args.maxnorm==False:
+            maxNorm=None
+        else:
+            maxNorm=args.maxnorm
+        self.lut = nn.Embedding(self.vsize, self.nhid, max_norm=maxNorm)
         self.rnn = nn.LSTM(
             input_size=self.nhid,
             hidden_size=self.nhid,
@@ -43,12 +49,17 @@ class LstmLm(nn.Module):
         self.drop = nn.Dropout(self.dropout)
         self.proj = nn.Linear(self.nhid, self.vsize)
         self.trainingEpochs=0 #number of epochs already trained
+        self.trainingBatches=0
         self.temperature=1
+        self.generationIteratorBuilt=False
         
         if self.tieweights:
             # See https://arxiv.org/abs/1608.05859
             # Seems to improve ppl by 13%.
             self.proj.weight = self.lut.weight
+        
+        if torch.cuda.is_available():
+            self.cuda()
 
     def forward(self, input, hid):
         emb = self.lut(input)
@@ -57,16 +68,19 @@ class LstmLm(nn.Module):
         # Recall that hid = (h,c).
         return self.proj(self.drop(hids)), tuple(map(lambda x: x.detach(), hid))
     
-    def next_N_words(self, word, hid, TEXT, length_to_predict):
+    def next_N_words(self, word, hid_, TEXT, length_to_predict):
         output=[]
         
         for i in range(length_to_predict):
             wordIndex=TEXT.vocab.stoi[word]
             input_tensor=Variable(torch.LongTensor([[wordIndex]]))
             
+            if torch.cuda.is_available():
+                input_tensor=input_tensor.cuda()
+            
             emb = self.lut(input_tensor)
             
-            hids, hid = self.rnn(emb, hid)
+            hids, hid_ = self.rnn(emb, hid_)
             
             next_logits=self.proj((hids)).view(-1)
             next_distr=torch.nn.Softmax(dim=0)(torch.mul(next_logits, 1/self.temperature))
@@ -79,8 +93,9 @@ class LstmLm(nn.Module):
 
         
 
-    def train_epoch(self, iter, loss, optimizer, viz, win, infoToPlot=None):
+    def train_epoch(self, iter, loss, optimizer, viz, win, TEXT, infoToPlot=None):
         self.train()
+        self.trainingBatches=0
 
         train_loss = 0
         nwords = 0
@@ -88,26 +103,39 @@ class LstmLm(nn.Module):
         hid = None
         batch_id=0
         for batch in tqdm(iter):
+            self.trainingBatches+=1
             optimizer.zero_grad()
             x = batch.text
             y = batch.target
+            
+            if torch.cuda.is_available():
+                x=x.cuda()
+                y=y.cuda()
+                
             out, hid = self(x, hid if hid is not None else None)
             bloss = loss(out.view(-1, self.vsize), y.view(-1))
-        
+            self.train()
+
             bloss.backward()
             train_loss += bloss
             # bytetensor.sum overflows, so cast to int
             local_nwords= y.ne(self.padidx).int().sum()
             nwords += local_nwords
             if self.args.clip > 0:
-                clip_grad_norm(self.parameters(), self.args.clip)
+                clip_grad_norm_(self.parameters(), self.args.clip)
 
             optimizer.step()
             
+            
+            
             if not infoToPlot is None:
-                infoToPlot['trainPerp']+=[np.exp(bloss.data[0]/local_nwords.data[0])]
+                infoToPlot['trainPerp']+=[np.exp(bloss.item()/local_nwords.item())]
                 
             if batch_id % 100 == 0:
+                sampled_sentences=self.generate_predictions(TEXT)
+                #print(sampled_sentences)
+                infoToPlot['generated']=sampled_sentences
+                #print(infoToPlot['generated'])
                 win = visdom_plot(viz, win, infoToPlot)
 
                 
@@ -137,24 +165,31 @@ class LstmLm(nn.Module):
             
         return valid_loss.data[0], nwords.data[0]
 
-    def generate_predictions(self, TEXT, outputDirectory=None, epoch=None):
+    def generate_predictions(self, TEXT, outputDirectory=None, epoch=None, saveOutputs=False):
         if outputDirectory==None:
             outputDirectory=self.args.directoryData
         if epoch==None:
             epoch=self.trainingEpochs
+        
             
         self.eval()
-        batch_number=3
-        outputs=['' for _ in range(batch_number)]
+        batch_number=10
+        outputs=[dict({'input_sentence':'','expected_sentence':'','output_sentence':''}) for _ in range(batch_number)]
         #prepare the data to generate on
-        data = torchtext.datasets.LanguageModelingDataset(
-            path=os.path.join(os.getcwd(),"data", "splitted", "smallData","gen.txt"),
-            text_field=TEXT)
-        data_iter = torchtext.data.BPTTIterator(data, batch_number, 100, device=self.args.devid, train=False)
-        print()
-        print("Generating the next 80 words, from the 20 first ones")
-        sample=next(iter(data_iter))
+        
+        if not self.generationIteratorBuilt:
+            data = torchtext.datasets.LanguageModelingDataset(
+                path=os.path.join(os.getcwd(),"data", "splitted", "smallData","gen.txt"),
+                text_field=TEXT)
+            data_iter = torchtext.data.BPTTIterator(data, batch_number, 100, device=self.args.devid, train=False)
+            #print()
+            #print("Generating the next 80 words, from the 20 first ones")
+            self.iterator=itertools.cycle(iter(data_iter))
+            self.generationIteratorBuilt=True
+        sample=next(self.iterator)
         input_sentence=sample.text[:20,:]
+        if torch.cuda.is_available:
+            input_sentence=input_sentence.cuda()
         expected_sentence=sample.text
         
         #we will give the 20 first words of a sentence, and predict the 80 next characters
@@ -170,12 +205,12 @@ class LstmLm(nn.Module):
       
         
        
-        
-        with open(os.path.join(outputDirectory,self.__class__.__name__ + ".preds.txt"), "a") as f:
-            f.write('*' * 20)
-            f.write('\n \n NEW EPOCH : {} \n \n '.format(epoch))
-            f.write('*' * 20)
-            f.write('\n')
+        if saveOutputs:
+            with open(os.path.join(outputDirectory,self.__class__.__name__ + ".preds.txt"), "a") as f:
+                f.write('*' * 20)
+                f.write('\n \n NEW : EPOCH {} \n \n '.format(epoch))
+                f.write('*' * 20)
+                f.write('\n')
             
         #first we run the model on the first 20 words, in order to give context to the hidden state
         output_sentence, hidden = self(input_sentence, None)
@@ -193,22 +228,26 @@ class LstmLm(nn.Module):
             
             output=self.next_N_words(input_word, local_hidden, TEXT, 80)
 
-            outputs[batch_index]=''.join([x+' ' for x in output])
-            with open(os.path.join(outputDirectory,self.__class__.__name__ + ".preds.txt"), "a") as f:
-
-                f.write('input sentence : \n')
-                f.write( ''.join([x+' ' for x in input_words[batch_index]]))
-                f.write('\n \n')
-                
-                f.write('expected output sentence : \n')
-                f.write(''.join([x+' ' for x in expected_output_words[batch_index]]))
-                f.write('\n \n')
-                
-                f.write('sampled output sentence : \n')
-                f.write(''.join([x+' ' for x in output]))
-                f.write('\n \n \n ')
+            outputs[batch_index]['input_sentence']=''.join([x+' ' for x in input_words[batch_index]])
+            outputs[batch_index]['expected_sentence']=''.join([x+' ' for x in expected_output_words[batch_index]])
+            outputs[batch_index]['output_sentence']=''.join([x+' ' for x in output])
+            
+            if saveOutputs:
+                with open(os.path.join(outputDirectory,self.__class__.__name__ + ".preds.txt"), "a") as f:
+    
+                    f.write('input sentence : \n')
+                    f.write( ''.join([x+' ' for x in input_words[batch_index]]))
+                    f.write('\n \n')
+                    
+                    f.write('expected output sentence : \n')
+                    f.write(''.join([x+' ' for x in expected_output_words[batch_index]]))
+                    f.write('\n \n')
+                    
+                    f.write('sampled output sentence : \n')
+                    f.write(''.join([x+' ' for x in output]))
+                    f.write('\n \n \n ')
            
-            return(outputs)
+        return(outputs)
             
                 
         

@@ -35,7 +35,7 @@ def get_args():
     parser.add_argument("--maxnorm", type=float, default=False)
     parser.add_argument("--dropout", type=float, default=0)
 
-    parser.add_argument("--epochs", type=int, default=1)
+    parser.add_argument("--epochs", type=int, default=19)
 
     parser.add_argument("--optim", choices=["SGD", "Adam"], default="Adam")
 

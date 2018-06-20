@@ -1,35 +1,35 @@
-experience done on : 19/06/2018 at 18:18:16  
-       nonag             0 
-     dropout             0 
-         eps         1e-08 
-          dm             0 
-         vis             1 
-directoryData  C:\Users\simon\Desktop\HMS\projects\LM_word\results\LstmLm_smallData_Exp35\data 
-serverVisdom  http://localhost 
+experience done on : 20/06/2018 at 15:34:23  
           b2         0.999 
-directoryOut  C:\Users\simon\Desktop\HMS\projects\LM_word\results\LstmLm_smallData_Exp35 
-         mom          0.99 
-        nhid            10 
-          b1           0.9 
-  vocab_size           100 
+         bsz            32 
+       Nplot           100 
+          dm             0 
+     dataset     smallData 
+     nlayers             1 
+directoryScripts  C:\Users\simon\Desktop\HMS\projects\LM_word\results\LstmLm_smallData_Exp35\scrpits 
+  portVisdom          8097 
+         eps         1e-08 
         clip             5 
- Nexperience            35 
-     maxnorm             0 
-       optim          Adam 
+       nonag             0 
+serverVisdom  http://localhost 
           wd        0.0001 
-        bptt            25 
       epochs            19 
   tieweights             1 
-directoryScripts  C:\Users\simon\Desktop\HMS\projects\LM_word\results\LstmLm_smallData_Exp35\scrpits 
+directoryData  C:\Users\simon\Desktop\HMS\projects\LM_word\results\LstmLm_smallData_Exp35\data 
+directoryOut  C:\Users\simon\Desktop\HMS\projects\LM_word\results\LstmLm_smallData_Exp35 
         cuda             1 
-     nlayers             1 
-         lrd          0.25 
-  portVisdom          8097 
-    dataPath  C://Users//simon//Desktop//HMS//projects//LM_word//data//splitted//smallData//  
-directoryCkpt  C:\Users\simon\Desktop\HMS\projects\LM_word\results\LstmLm_smallData_Exp35\checkpoint 
-          lr          0.01 
+     dropout             0 
        devid            -1 
-         bsz            32 
+directoryCkpt  C:\Users\simon\Desktop\HMS\projects\LM_word\results\LstmLm_smallData_Exp35\checkpoint 
+        nhid            10 
+ Nexperience            35 
+         mom          0.99 
+     maxnorm             0 
+          lr          0.01 
+         vis             1 
+  vocab_size           100 
+          b1           0.9 
+        bptt            25 
        model        LstmLm 
-     dataset     smallData 
-       Nplot           100 
+    dataPath  C://Users//simon//Desktop//HMS//projects//LM_word//data//splitted//smallData//  
+         lrd          0.25 
+       optim          Adam 

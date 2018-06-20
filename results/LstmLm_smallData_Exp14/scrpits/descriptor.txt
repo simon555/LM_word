@@ -1,35 +1,35 @@
-experience done on : 19/06/2018 at 15:08:58  
-          b2         0.999 
+experience done on : 20/06/2018 at 14:23:11  
           b1           0.9 
-      epochs             1 
-        cuda             1 
-       Nplot           100 
-       devid            -1 
-         lrd          0.25 
+          b2         0.999 
           dm             0 
-serverVisdom  http://localhost 
-directoryOut  C:\Users\simon\Desktop\HMS\projects\LM_word\results\LstmLm_smallData_Exp14 
-    dataPath  C://Users//simon//Desktop//HMS//projects//LM_word//data//splitted//smallData//  
+        nhid            10 
          vis             1 
-directoryCkpt  C:\Users\simon\Desktop\HMS\projects\LM_word\results\LstmLm_smallData_Exp14\checkpoint 
  Nexperience            14 
      nlayers             1 
-  vocab_size             0 
-       optim          Adam 
-         mom          0.99 
-         eps         1e-08 
-        nhid            10 
-     dropout             0 
-  tieweights             1 
-         bsz            32 
-directoryScripts  C:\Users\simon\Desktop\HMS\projects\LM_word\results\LstmLm_smallData_Exp14\scrpits 
-        bptt            25 
   portVisdom          8097 
+         bsz            32 
+          wd        0.0001 
+         eps         1e-08 
+        cuda             1 
      dataset     smallData 
-       nonag             0 
-       model        LstmLm 
-     maxnorm             0 
+       devid            -1 
+        bptt            25 
+       Nplot           100 
           lr          0.01 
         clip             5 
+       nonag             0 
+  tieweights             1 
+    dataPath  C://Users//simon//Desktop//HMS//projects//LM_word//data//splitted//smallData//  
+serverVisdom  http://localhost 
+directoryScripts  C:\Users\simon\Desktop\HMS\projects\LM_word\results\LstmLm_smallData_Exp14\scrpits 
+directoryOut  C:\Users\simon\Desktop\HMS\projects\LM_word\results\LstmLm_smallData_Exp14 
+  vocab_size           100 
+       model        LstmLm 
+directoryCkpt  C:\Users\simon\Desktop\HMS\projects\LM_word\results\LstmLm_smallData_Exp14\checkpoint 
 directoryData  C:\Users\simon\Desktop\HMS\projects\LM_word\results\LstmLm_smallData_Exp14\data 
-          wd        0.0001 
+      epochs            19 
+         lrd          0.25 
+         mom          0.99 
+     maxnorm             0 
+     dropout             0 
+       optim          Adam 

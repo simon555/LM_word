@@ -1,35 +1,35 @@
-experience done on : 19/06/2018 at 18:07:13  
-       nonag             0 
-     dropout             0 
-         eps         1e-08 
-          dm             0 
-         vis             1 
-directoryData  C:\Users\simon\Desktop\HMS\projects\LM_word\results\LstmLm_smallData_Exp34\data 
-serverVisdom  http://localhost 
-          b2         0.999 
-directoryOut  C:\Users\simon\Desktop\HMS\projects\LM_word\results\LstmLm_smallData_Exp34 
-         mom          0.99 
-        nhid            10 
-          b1           0.9 
-  vocab_size           100 
+experience done on : 20/06/2018 at 15:32:46  
         clip             5 
- Nexperience            34 
-     maxnorm             0 
-       optim          Adam 
-          wd        0.0001 
-        bptt            25 
-      epochs            19 
-  tieweights             1 
-directoryScripts  C:\Users\simon\Desktop\HMS\projects\LM_word\results\LstmLm_smallData_Exp34\scrpits 
-        cuda             1 
-     nlayers             1 
-         lrd          0.25 
+directoryData  C:\Users\simon\Desktop\HMS\projects\LM_word\results\LstmLm_smallData_Exp34\data 
   portVisdom          8097 
-    dataPath  C://Users//simon//Desktop//HMS//projects//LM_word//data//splitted//smallData//  
-directoryCkpt  C:\Users\simon\Desktop\HMS\projects\LM_word\results\LstmLm_smallData_Exp34\checkpoint 
-          lr          0.01 
-       devid            -1 
-         bsz            32 
-       model        LstmLm 
-     dataset     smallData 
        Nplot           100 
+  vocab_size           100 
+        bptt            25 
+         vis             1 
+      epochs            19 
+       model        LstmLm 
+         bsz            32 
+serverVisdom  http://localhost 
+     maxnorm             0 
+     nlayers             1 
+directoryCkpt  C:\Users\simon\Desktop\HMS\projects\LM_word\results\LstmLm_smallData_Exp34\checkpoint 
+ Nexperience            34 
+       nonag             0 
+     dataset     smallData 
+       devid            -1 
+         lrd          0.25 
+         eps         1e-08 
+directoryScripts  C:\Users\simon\Desktop\HMS\projects\LM_word\results\LstmLm_smallData_Exp34\scrpits 
+       optim          Adam 
+         mom          0.99 
+          b2         0.999 
+        nhid            10 
+          lr          0.01 
+    dataPath  C://Users//simon//Desktop//HMS//projects//LM_word//data//splitted//smallData//  
+          b1           0.9 
+          dm             0 
+          wd        0.0001 
+directoryOut  C:\Users\simon\Desktop\HMS\projects\LM_word\results\LstmLm_smallData_Exp34 
+  tieweights             1 
+     dropout             0 
+        cuda             1 

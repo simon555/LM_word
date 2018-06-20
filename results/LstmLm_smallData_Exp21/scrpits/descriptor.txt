@@ -1,35 +1,35 @@
-experience done on : 19/06/2018 at 17:08:45  
-      epochs             1 
-directoryData  C:\Users\simon\Desktop\HMS\projects\LM_word\results\LstmLm_smallData_Exp21\data 
-     nlayers             1 
-directoryScripts  C:\Users\simon\Desktop\HMS\projects\LM_word\results\LstmLm_smallData_Exp21\scrpits 
-        cuda             1 
-directoryCkpt  C:\Users\simon\Desktop\HMS\projects\LM_word\results\LstmLm_smallData_Exp21\checkpoint 
-          lr          0.01 
-       Nplot           100 
-          b1           0.9 
-    dataPath  C://Users//simon//Desktop//HMS//projects//LM_word//data//splitted//smallData//  
+experience done on : 20/06/2018 at 14:36:41  
 serverVisdom  http://localhost 
-       optim          Adam 
-          b2         0.999 
-     maxnorm             0 
-        nhid            10 
+          lr          0.01 
+     nlayers             1 
           dm             0 
- Nexperience            21 
-         bsz            32 
-         lrd          0.25 
-         mom          0.99 
+        nhid            10 
          eps         1e-08 
-  vocab_size             0 
+     dropout             0 
+         lrd          0.25 
+         bsz            32 
+          wd        0.0001 
         clip             5 
+     dataset     smallData 
   portVisdom          8097 
+       devid            -1 
+     maxnorm             0 
+ Nexperience            21 
 directoryOut  C:\Users\simon\Desktop\HMS\projects\LM_word\results\LstmLm_smallData_Exp21 
        nonag             0 
-     dataset     smallData 
-        bptt            25 
          vis             1 
   tieweights             1 
+      epochs            19 
+directoryScripts  C:\Users\simon\Desktop\HMS\projects\LM_word\results\LstmLm_smallData_Exp21\scrpits 
+          b2         0.999 
+    dataPath  C://Users//simon//Desktop//HMS//projects//LM_word//data//splitted//smallData//  
+directoryCkpt  C:\Users\simon\Desktop\HMS\projects\LM_word\results\LstmLm_smallData_Exp21\checkpoint 
+directoryData  C:\Users\simon\Desktop\HMS\projects\LM_word\results\LstmLm_smallData_Exp21\data 
+         mom          0.99 
+       optim          Adam 
+        cuda             1 
+          b1           0.9 
+  vocab_size           100 
+       Nplot           100 
        model        LstmLm 
-       devid            -1 
-          wd        0.0001 
-     dropout             0 
+        bptt            25 

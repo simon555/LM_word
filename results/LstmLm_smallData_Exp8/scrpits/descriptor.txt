@@ -1,35 +1,35 @@
-experience done on : 19/06/2018 at 11:10:26  
-serverVisdom  http://localhost 
-        cuda             1 
-         vis             1 
-directoryScripts  C:\Users\simon\Desktop\HMS\projects\LM_word\results\LstmLm_smallData_Exp8\scrpits 
-       optim          Adam 
-        bptt            25 
-directoryData  C:\Users\simon\Desktop\HMS\projects\LM_word\results\LstmLm_smallData_Exp8\data 
-        nhid            10 
-          lr          0.01 
-     nlayers             1 
-     dataset     smallData 
-          b1           0.9 
-  vocab_size             0 
-directoryOut  C:\Users\simon\Desktop\HMS\projects\LM_word\results\LstmLm_smallData_Exp8 
-       Nplot           100 
-  tieweights             1 
-  portVisdom          8097 
-    dataPath  C://Users//simon//Desktop//HMS//projects//LM_word//data//splitted//smallData//  
-         mom          0.99 
-       model        LstmLm 
-directoryCkpt  C:\Users\simon\Desktop\HMS\projects\LM_word\results\LstmLm_smallData_Exp8\checkpoint 
+experience done on : 20/06/2018 at 14:13:20  
           b2         0.999 
-      epochs             1 
-       nonag             0 
         clip             5 
-         lrd          0.25 
-         eps         1e-08 
-     dropout             0 
- Nexperience             8 
+     dataset     smallData 
        devid            -1 
-          dm             0 
-         bsz            32 
-          wd        0.0001 
+         eps         1e-08 
+directoryData  C:\Users\simon\Desktop\HMS\projects\LM_word\results\LstmLm_smallData_Exp8\data 
+directoryCkpt  C:\Users\simon\Desktop\HMS\projects\LM_word\results\LstmLm_smallData_Exp8\checkpoint 
+          lr          0.01 
      maxnorm             0 
+  portVisdom          8097 
+          wd        0.0001 
+         mom          0.99 
+        bptt            25 
+  vocab_size           100 
+directoryScripts  C:\Users\simon\Desktop\HMS\projects\LM_word\results\LstmLm_smallData_Exp8\scrpits 
+       model        LstmLm 
+       optim          Adam 
+      epochs            19 
+    dataPath  C://Users//simon//Desktop//HMS//projects//LM_word//data//splitted//smallData//  
+         vis             1 
+     dropout             0 
+serverVisdom  http://localhost 
+  tieweights             1 
+         lrd          0.25 
+        cuda             1 
+         bsz            32 
+directoryOut  C:\Users\simon\Desktop\HMS\projects\LM_word\results\LstmLm_smallData_Exp8 
+ Nexperience             8 
+          dm             0 
+       Nplot           100 
+     nlayers             1 
+       nonag             0 
+        nhid            10 
+          b1           0.9 

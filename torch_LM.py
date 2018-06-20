@@ -50,9 +50,10 @@ train, valid, test = torchtext.datasets.LanguageModelingDataset.splits(
 TEXT.build_vocab(train, max_size=args.vocab_size if args.vocab_size is not False else None )
 padidx = TEXT.vocab.stoi["<pad>"]
 
+
 #build data iterators
 train_iter, valid_iter, test_iter = torchtext.data.BPTTIterator.splits(
-    (train, valid, test), batch_size=args.bsz, device=args.devid, bptt_len=args.bptt, repeat=False)
+    (train, valid, test), batch_size=args.bsz, device=0, bptt_len=args.bptt, repeat=False)
 
 
 
@@ -130,7 +131,7 @@ for i in vars(args):
     descriptor+=line_new
     #print(line_new)
 print(descriptor)
-time.sleep(5)
+#time.sleep(5)
 
 with open(os.path.join(directoryScripts, 'descriptor.txt'), 'w') as outstream:
     outstream.write("experience done on : {} at {}  \n".format(time.strftime("%d/%m/%Y"),time.strftime("%H:%M:%S")))
@@ -183,9 +184,12 @@ if __name__ == "__main__":
     # this can decrease ppl a few points.
     weight = torch.FloatTensor(model.vsize).fill_(1)
     weight[padidx] = 0
-    if args.devid >= 0:
-        weight = weight.cuda(args.devid)
+    if torch.cuda.is_available():
+        weight = weight.cuda()
     loss = nn.CrossEntropyLoss(weight=V(weight), size_average=False)
+    
+    if torch.cuda.is_available():
+        loss=loss.cuda()
 
 
     #define optimizer
@@ -214,6 +218,8 @@ if __name__ == "__main__":
         print('save info...')
         with open(os.path.join(directoryData,'data.pkl'), 'wb') as f:
             pickle.dump(infoToPlot, f, pickle.HIGHEST_PROTOCOL)
+        print('generate sameple sentences...')    
+        outputs=model.generate_predictions(TEXT, saveOutputs=True)
 
     #test and save model
     test_loss, test_words = model.validate(test_iter, loss)
@@ -221,5 +227,6 @@ if __name__ == "__main__":
     model.generate_predictions(TEXT)
     print('save model...')
     model.generationIteratorBuilt=False
+    model.iterator=None
     torch.save(model.cpu().state_dict(), os.path.join(directoryCkpt,model.__class__.__name__ + ".pth"))
     print('done')

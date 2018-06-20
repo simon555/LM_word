@@ -1,35 +1,35 @@
-experience done on : 19/06/2018 at 15:24:37  
+experience done on : 20/06/2018 at 14:24:43  
           b2         0.999 
-          b1           0.9 
-      epochs             1 
-        cuda             1 
-       Nplot           100 
-       devid            -1 
-         lrd          0.25 
-          dm             0 
-serverVisdom  http://localhost 
 directoryOut  C:\Users\simon\Desktop\HMS\projects\LM_word\results\LstmLm_smallData_Exp16 
-    dataPath  C://Users//simon//Desktop//HMS//projects//LM_word//data//splitted//smallData//  
-         vis             1 
-directoryCkpt  C:\Users\simon\Desktop\HMS\projects\LM_word\results\LstmLm_smallData_Exp16\checkpoint 
- Nexperience            16 
-     nlayers             1 
-  vocab_size             0 
-       optim          Adam 
-         mom          0.99 
-         eps         1e-08 
+       Nplot           100 
+         bsz            32 
+  portVisdom          8097 
+       nonag             0 
         nhid            10 
      dropout             0 
   tieweights             1 
-         bsz            32 
-directoryScripts  C:\Users\simon\Desktop\HMS\projects\LM_word\results\LstmLm_smallData_Exp16\scrpits 
-        bptt            25 
-  portVisdom          8097 
+  vocab_size           100 
      dataset     smallData 
-       nonag             0 
-       model        LstmLm 
-     maxnorm             0 
-          lr          0.01 
-        clip             5 
+        cuda             1 
+     nlayers             1 
+ Nexperience            16 
+      epochs            19 
+          b1           0.9 
+          dm             0 
 directoryData  C:\Users\simon\Desktop\HMS\projects\LM_word\results\LstmLm_smallData_Exp16\data 
+       model        LstmLm 
+         mom          0.99 
+        clip             5 
+    dataPath  C://Users//simon//Desktop//HMS//projects//LM_word//data//splitted//smallData//  
+directoryCkpt  C:\Users\simon\Desktop\HMS\projects\LM_word\results\LstmLm_smallData_Exp16\checkpoint 
+serverVisdom  http://localhost 
+        bptt            25 
+         eps         1e-08 
           wd        0.0001 
+       devid            -1 
+     maxnorm             0 
+directoryScripts  C:\Users\simon\Desktop\HMS\projects\LM_word\results\LstmLm_smallData_Exp16\scrpits 
+       optim          Adam 
+         vis             1 
+          lr          0.01 
+         lrd          0.25 

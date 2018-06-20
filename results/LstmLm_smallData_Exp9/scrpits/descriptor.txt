@@ -1,35 +1,35 @@
-experience done on : 19/06/2018 at 13:17:49  
+experience done on : 20/06/2018 at 14:13:51  
           b2         0.999 
-          b1           0.9 
-      epochs             1 
-        cuda             1 
-       Nplot           100 
+        clip             5 
+     dataset     smallData 
        devid            -1 
-         lrd          0.25 
-          dm             0 
-serverVisdom  http://localhost 
-directoryOut  C:\Users\simon\Desktop\HMS\projects\LM_word\results\LstmLm_smallData_Exp9 
+         eps         1e-08 
+directoryData  C:\Users\simon\Desktop\HMS\projects\LM_word\results\LstmLm_smallData_Exp9\data 
+directoryCkpt  C:\Users\simon\Desktop\HMS\projects\LM_word\results\LstmLm_smallData_Exp9\checkpoint 
+          lr          0.01 
+     maxnorm             0 
+  portVisdom          8097 
+          wd        0.0001 
+         mom          0.99 
+        bptt            25 
+  vocab_size           100 
+directoryScripts  C:\Users\simon\Desktop\HMS\projects\LM_word\results\LstmLm_smallData_Exp9\scrpits 
+       model        LstmLm 
+       optim          Adam 
+      epochs            19 
     dataPath  C://Users//simon//Desktop//HMS//projects//LM_word//data//splitted//smallData//  
          vis             1 
-directoryCkpt  C:\Users\simon\Desktop\HMS\projects\LM_word\results\LstmLm_smallData_Exp9\checkpoint 
- Nexperience             9 
-     nlayers             1 
-  vocab_size             0 
-       optim          Adam 
-         mom          0.99 
-         eps         1e-08 
-        nhid            10 
      dropout             0 
+serverVisdom  http://localhost 
   tieweights             1 
+         lrd          0.25 
+        cuda             1 
          bsz            32 
-directoryScripts  C:\Users\simon\Desktop\HMS\projects\LM_word\results\LstmLm_smallData_Exp9\scrpits 
-        bptt            25 
-  portVisdom          8097 
-     dataset     smallData 
+directoryOut  C:\Users\simon\Desktop\HMS\projects\LM_word\results\LstmLm_smallData_Exp9 
+ Nexperience             9 
+          dm             0 
+       Nplot           100 
+     nlayers             1 
        nonag             0 
-       model        LstmLm 
-     maxnorm             0 
-          lr          0.01 
-        clip             5 
-directoryData  C:\Users\simon\Desktop\HMS\projects\LM_word\results\LstmLm_smallData_Exp9\data 
-          wd        0.0001 
+        nhid            10 
+          b1           0.9 
