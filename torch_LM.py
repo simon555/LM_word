@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 
-
+print('loading dependencies...')
 import argparse
 
 import torch
@@ -24,6 +24,8 @@ from local_models import lstm
 # =============================================================================
 # summarizing the arguments for this experiment
 # =============================================================================
+print('parse arguments...')
+
 args = get_args()
 
 
@@ -38,6 +40,7 @@ if args.devid >= 0:
 # =============================================================================
 # load the data
 # =============================================================================
+print('load the data...')
 
 if os.name=='nt':
     pathToData=os.path.join(os.getcwd(),'data','splitted','smallData')
@@ -52,11 +55,13 @@ train, valid, test = torchtext.datasets.LanguageModelingDataset.splits(
     #train="train.txt", validation="valid.txt", test="test.txt", text_field=TEXT)
 
 #build vocab
+print('build vocabulary from that data...')
 TEXT.build_vocab(train, max_size=args.vocab_size if args.vocab_size is not False else None )
 padidx = TEXT.vocab.stoi["<pad>"]
 
 
 #build data iterators
+print('build iterators...')
 train_iter, valid_iter, test_iter = torchtext.data.BPTTIterator.splits(
     (train, valid, test), batch_size=args.bsz, device=0, bptt_len=args.bptt, repeat=False)
 
@@ -65,6 +70,7 @@ train_iter, valid_iter, test_iter = torchtext.data.BPTTIterator.splits(
 # =============================================================================
 # Build the output directories for this experiment
 # =============================================================================
+print('build output directories for this experiment...')
 
 Nexperience=1
 
@@ -100,6 +106,8 @@ d['Nexperience']=Nexperience
 # =============================================================================
 # save the scripts to rerun this experiment
 # =============================================================================
+print('save the informations of this experiment...')
+
 #save the model scripts
 if os.name=='nt':
     root='copy '
@@ -178,6 +186,7 @@ if args.vis:
 if __name__ == "__main__":
     
     #instantiate model
+    print('build model...')
     model = lstm.LstmLm(args,TEXT.vocab, padidx)
     
     print(model)
@@ -194,10 +203,12 @@ if __name__ == "__main__":
     loss = nn.CrossEntropyLoss(weight=V(weight), size_average=False)
     
     if torch.cuda.is_available():
+        print('with cuda!')
         loss=loss.cuda()
 
 
     #define optimizer
+    print('define optimizer...')
     params = [p for p in model.parameters() if p.requires_grad]
     if args.optim == "Adam":
         optimizer = optim.Adam(
@@ -211,6 +222,7 @@ if __name__ == "__main__":
 
 
     #training loop
+    print('start the training...')
     for epoch in range(args.epochs):
         print("Epoch {}, lr {}".format(epoch, optimizer.param_groups[0]['lr']))
         train_loss, train_words = model.train_epoch(
@@ -227,8 +239,10 @@ if __name__ == "__main__":
         outputs=model.generate_predictions(TEXT, saveOutputs=True)
 
     #test and save model
+    print('run on the test set...')
     test_loss, test_words = model.validate(test_iter, loss)
     print("Test: {}".format(math.exp(test_loss / test_words)))
+    print('generate predictions with the trained model...')
     model.generate_predictions(TEXT)
     print('save model...')
     model.generationIteratorBuilt=False
