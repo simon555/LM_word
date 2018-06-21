@@ -42,7 +42,7 @@ if args.devid >= 0:
 if os.name=='nt':
     pathToData=os.path.join(os.getcwd(),'data','splitted','smallData')
 else:
-    pathToData=os.path.join('mnt','raid1','text','big_files','splitted','springer_cui_tokenized')
+    pathToData=os.path.join('/mnt','raid1','text','big_files','splitted','springer_cui_tokenized')
 #load raw data
 TEXT = torchtext.data.Field()
 train, valid, test = torchtext.datasets.LanguageModelingDataset.splits(
