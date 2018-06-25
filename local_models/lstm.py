@@ -153,10 +153,6 @@ class LstmLm(nn.Module):
                     win = visdom_plot(viz, win, infoToPlot)
                 
                 self.train()
-
-
-
-
                 
             
             batch_id+=1
