@@ -2,7 +2,6 @@
 import argparse
 
 import torch
-import os
 
 
 def get_args():
@@ -12,12 +11,7 @@ def get_args():
     
     parser.add_argument('--Nplot', default=300,type=int, help='number of batches between each plot')
         
-    
-    if os.name=='nt':
-        parser.add_argument('--dataset', default='smallData', type=str) 
-    else:
-        parser.add_argument('--dataset', default='springer_cui_tokenized', type=str) 
-    
+    parser.add_argument('--dataset', default='smallData', type=str) 
     
     parser.add_argument('--dataPath', default="C://Users//simon//Desktop//HMS//projects//LM_word//data//splitted//smallData// ", type=str)
     
@@ -28,14 +22,10 @@ def get_args():
     parser.add_argument('--portVisdom', default=8097,type= int) 
     
     parser.add_argument('--cuda', default=True,type= bool) 
-    if os.name=='nt':
-        parser.add_argument("--devid", type=int, default=0)
-    else:
-        parser.add_argument("--devid", type=int, default=6)
-
-    parser.add_argument("--vocab_size", type=int, default=100)
     
-    parser.add_argument("--grainLevel", type=str, default='word')
+    parser.add_argument("--devid", type=int, default=6)
+    parser.add_argument("--vocab_size", type=int, default=100)
+    parser.add_argument("--word_level", type=bool, default=True)
 
 
 

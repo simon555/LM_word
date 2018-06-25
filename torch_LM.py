@@ -74,9 +74,14 @@ else:
     size_of_voc='full'
     
     
-vocab_folder=os.path.join(root, args.dataset, 'vocab')
-path_to_vocab=os.path.join(vocab_folder, 'vocab_{}_words.pickle'.format(size_of_voc))
+vocab_folder=os.path.join(root, args.dataset, 'vocab',args.grainLevel)
+path_to_vocab=os.path.join(vocab_folder, 'vocab_{}_{}.pickle'.format(size_of_voc,args.grainLevel))
 
+if os.name=='nt':
+    pathToData=os.path.join(os.getcwd(),'data','splitted','smallData')
+else:
+    pathToData=os.path.join('/mnt','raid1','text','big_files','splitted','springer_cui_tokenized')
+        
 
 try:
     print('trying to load premade vocab...')
@@ -88,18 +93,20 @@ except:
     #load raw data
     print('load data...')
     TEXT = torchtext.data.Field()    
-    if os.name=='nt':
-        pathToData=os.path.join(os.getcwd(),'data','splitted','smallData')
-    else:
-        pathToData=os.path.join('/mnt','raid1','text','big_files','splitted','springer_cui_tokenized')
-        
-
-    train, valid, test = torchtext.datasets.LanguageModelingDataset.splits(
-    path=pathToData,
-    train="train.txt", validation="valid.txt", test="valid.txt", text_field=TEXT)
+    
+print('build iterator...')
+train, valid, test = torchtext.datasets.LanguageModelingDataset.splits(
+    path=pathToData, train="train.txt", validation="valid.txt", test="valid.txt", text_field=TEXT)
     #path="data/",
     #train="train.txt", validation="valid.txt", test="test.txt", text_field=TEXT)
+    
+    
+try:
+    print('vocab of size ', len(TEXT.vocab.itos))
+
+except:
     print('build vocab...')
+    
     TEXT.build_vocab(train, max_size=args.vocab_size if args.vocab_size is not False else None )
     
     print('vocab built, we save it for a later use')
@@ -111,6 +118,9 @@ except:
     
     print('vocab saved!')
     
+    print('vocab of size ', len(TEXT.vocab.itos))
+
+    
 padidx = TEXT.vocab.stoi["<pad>"]
 
 
@@ -118,7 +128,7 @@ padidx = TEXT.vocab.stoi["<pad>"]
 #build data iterators
 print('build iterators...')
 train_iter, valid_iter, test_iter = torchtext.data.BPTTIterator.splits(
-    (train, valid, test), batch_size=args.bsz, device=0, bptt_len=args.bptt, repeat=False)
+    (train, valid, test), batch_size=args.bsz, device=args.devid, bptt_len=args.bptt, repeat=False)
 
 
 

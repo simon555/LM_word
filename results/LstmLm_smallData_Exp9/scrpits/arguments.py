@@ -28,11 +28,8 @@ def get_args():
     parser.add_argument('--portVisdom', default=8097,type= int) 
     
     parser.add_argument('--cuda', default=True,type= bool) 
-    if os.name=='nt':
-        parser.add_argument("--devid", type=int, default=0)
-    else:
-        parser.add_argument("--devid", type=int, default=6)
-
+    
+    parser.add_argument("--devid", type=int, default=6)
     parser.add_argument("--vocab_size", type=int, default=100)
     
     parser.add_argument("--grainLevel", type=str, default='word')
