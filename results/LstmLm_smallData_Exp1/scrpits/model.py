@@ -139,12 +139,10 @@ class LstmLm(nn.Module):
             
             
             
-            
+            if not infoToPlot is None:
+                infoToPlot['trainPerp']+=[np.exp(train_loss.item()/nwords.item())]
                 
-            if batch_id % self.args.Nplot == 0:
-                if not infoToPlot is None:
-                    infoToPlot['trainPerp']+=[np.exp(train_loss.item()/nwords.item())]
-                
+            if batch_id % 100 == 0:
                 sampled_sentences=self.generate_predictions(TEXT)
                 #print(sampled_sentences)
                 infoToPlot['generated']=sampled_sentences

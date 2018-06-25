@@ -9,13 +9,13 @@ def get_args():
     
     
     
-    parser.add_argument('--Nplot', default=300,type=int, help='number of batches between each plot')
+    parser.add_argument('--Nplot', default=100,type=int, help='number of batches between each plot')
         
     parser.add_argument('--dataset', default='smallData', type=str) 
     
     parser.add_argument('--dataPath', default="C://Users//simon//Desktop//HMS//projects//LM_word//data//splitted//smallData// ", type=str)
     
-    parser.add_argument('--vis', default=True, type= bool) 
+    parser.add_argument('--vis', default=False, type= bool) 
     
     parser.add_argument('--serverVisdom', default='http://localhost',type= str) 
     

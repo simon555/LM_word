@@ -21,6 +21,7 @@ import math
 from arguments import get_args
 from local_models import lstm
 
+import dill as pickle
 # =============================================================================
 # summarizing the arguments for this experiment
 # =============================================================================
@@ -42,22 +43,59 @@ if args.devid >= 0:
 # =============================================================================
 print('load the data...')
 
+
+#try to load a premade vocab
 if os.name=='nt':
-    pathToData=os.path.join(os.getcwd(),'data','splitted','smallData')
+    root=os.path.join(os.getcwd(),'data','splitted')
 else:
-    pathToData=os.path.join('/mnt','raid1','text','big_files','splitted','springer_cui_tokenized')
-#load raw data
-TEXT = torchtext.data.Field()
-train, valid, test = torchtext.datasets.LanguageModelingDataset.splits(
+    root=os.path.join('/mnt','raid1','text','big_files','splitted')
+
+
+if args.vocab_size is not False:
+    size_of_voc=args.vocab_size
+else:
+    size_of_voc='full'
+    
+    
+vocab_folder=os.path.join(root, args.dataset, 'vocab')
+path_to_vocab=os.path.join(vocab_folder, 'vocab_{}_words.pickle'.format(size_of_voc))
+
+
+try:
+    print('trying to load premade vocab...')
+    TEXT=pickle.load(open(path_to_vocab,'rb'))
+    print('premade vocab loaded : ', path_to_vocab)
+    
+except:
+    print('premade vocab not found, build a new one...')
+    #load raw data
+    print('load data...')
+    TEXT = torchtext.data.Field()    
+    if os.name=='nt':
+        pathToData=os.path.join(os.getcwd(),'data','splitted','smallData')
+    else:
+        pathToData=os.path.join('/mnt','raid1','text','big_files','splitted','springer_cui_tokenized')
+        
+
+    train, valid, test = torchtext.datasets.LanguageModelingDataset.splits(
     path=pathToData,
     train="train.txt", validation="valid.txt", test="valid.txt", text_field=TEXT)
     #path="data/",
     #train="train.txt", validation="valid.txt", test="test.txt", text_field=TEXT)
-
-#build vocab
-print('build vocabulary from that data...')
-TEXT.build_vocab(train, max_size=args.vocab_size if args.vocab_size is not False else None )
+    print('build vocab...')
+    TEXT.build_vocab(train, max_size=args.vocab_size if args.vocab_size is not False else None )
+    
+    print('vocab built, we save it for a later use')
+    if not os.path.exists(vocab_folder):
+        os.makedirs(vocab_folder)
+        
+    with open(path_to_vocab, 'wb') as handle:
+            pickle.dump(TEXT, handle, protocol=pickle.HIGHEST_PROTOCOL)
+    
+    print('vocab saved!')
+    
 padidx = TEXT.vocab.stoi["<pad>"]
+
 
 
 #build data iterators
@@ -151,7 +189,7 @@ with open(os.path.join(directoryScripts, 'descriptor.txt'), 'w') as outstream:
     outstream.write(descriptor)
     
 
-    
+     
 # =============================================================================
 # Define the info to track along the experiment
 # =============================================================================

@@ -9,7 +9,7 @@ def get_args():
     
     
     
-    parser.add_argument('--Nplot', default=300,type=int, help='number of batches between each plot')
+    parser.add_argument('--Nplot', default=100,type=int, help='number of batches between each plot')
         
     parser.add_argument('--dataset', default='smallData', type=str) 
     
