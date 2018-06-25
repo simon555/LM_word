@@ -1,5 +1,28 @@
 # -*- coding: utf-8 -*-
 
+
+# =============================================================================
+# summarizing the arguments for this experiment
+# =============================================================================
+print('parse arguments...')
+from arguments import get_args
+args = get_args()
+
+
+# =============================================================================
+# specifying the CUDA devide available on the server
+# =============================================================================
+import os
+
+if os.name != 'nt':
+    #work on linux server
+    command_to_run='CUDA_VISIB:E_DEVICE={}'.format(args.devid)
+    check=os.system(command_to_run)
+    print(check==0)
+
+
+
+
 print('loading dependencies...')
 import argparse
 
@@ -18,16 +41,10 @@ from tqdm import tqdm
 import random
 import sys
 import math
-from arguments import get_args
 from local_models import lstm
 
 import dill as pickle
-# =============================================================================
-# summarizing the arguments for this experiment
-# =============================================================================
-print('parse arguments...')
 
-args = get_args()
 
 
 random.seed(1111)
@@ -229,8 +246,8 @@ if __name__ == "__main__":
     
     print(model)
     
-    if args.devid >= 0:
-        model.cuda(args.devid)
+    #if args.devid >= 0:
+    #    model.cuda(args.devid)
 
     # We do not want to give the model credit for predicting padding symbols,
     # this can decrease ppl a few points.

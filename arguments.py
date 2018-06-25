@@ -23,8 +23,10 @@ def get_args():
     
     parser.add_argument('--cuda', default=True,type= bool) 
     
-    parser.add_argument("--devid", type=int, default=-1)
+    parser.add_argument("--devid", type=int, default=6)
     parser.add_argument("--vocab_size", type=int, default=100)
+    parser.add_argument("--word_level", type=bool, default=True)
+
 
 
     parser.add_argument("--model", choices=["NnLm", "LstmLm"], default="LstmLm")
