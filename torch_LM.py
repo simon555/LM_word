@@ -18,7 +18,8 @@ if os.name != 'nt':
     #work on linux server
     command_to_run='CUDA_VISIBLE_DEVICE={}'.format(args.devid)
     check=os.system(command_to_run)
-    print(check==0)
+    print('command run : ', command_to_run, '...', check==0)
+    
 
 
 
