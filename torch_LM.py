@@ -128,7 +128,7 @@ padidx = TEXT.vocab.stoi["<pad>"]
 #build data iterators
 print('build iterators...')
 train_iter, valid_iter, test_iter = torchtext.data.BPTTIterator.splits(
-    (train, valid, test), batch_size=args.bsz, device=args.devid, bptt_len=args.bptt, repeat=False)
+    (train, valid, test), batch_size=args.bsz, bptt_len=args.bptt, repeat=False)
 
 
 

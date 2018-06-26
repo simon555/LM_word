@@ -204,7 +204,7 @@ class LstmLm(nn.Module):
             data = torchtext.datasets.LanguageModelingDataset(
                 path=os.path.join(os.getcwd(),"data", "splitted", "smallData","gen.txt"),
                 text_field=TEXT)
-            data_iter = torchtext.data.BPTTIterator(data, batch_number, 100, device=self.args.devid, train=False)
+            data_iter = torchtext.data.BPTTIterator(data, batch_number, 100, train=False)
             #print()
             #print("Generating the next 80 words, from the 20 first ones")
             self.iterator=itertools.cycle(iter(data_iter))
