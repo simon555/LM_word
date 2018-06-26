@@ -25,7 +25,6 @@ if os.name != 'nt':
 
 
 print('loading dependencies...')
-import argparse
 
 import torch
 import torch.nn as nn
