@@ -130,8 +130,7 @@ class LstmLm(nn.Module):
             bloss.backward()
             train_loss += bloss
             # bytetensor.sum overflows, so cast to int
-            local_nwords= y.ne(self.padidx).int().sum()
-            nwords += local_nwords
+            nwords += y.ne(self.padidx).int().sum().item()
             if self.args.clip > 0:
                 clip_grad_norm_(self.parameters(), self.args.clip)
 
@@ -143,7 +142,7 @@ class LstmLm(nn.Module):
                 
             if batch_id % self.args.Nplot == 0:
                 if not infoToPlot is None:
-                    infoToPlot['trainPerp']+=[np.exp(train_loss.item()/nwords.item())]
+                    infoToPlot['trainPerp']+=[np.exp(train_loss.item()/nwords]
                 
                 sampled_sentences=self.generate_predictions(TEXT)
                 #print(sampled_sentences)
@@ -168,6 +167,11 @@ class LstmLm(nn.Module):
 
         hid = None
         for batch in tqdm(iter):
+            
+            if hid is not None:
+                hid[0].detach_()
+                hid[1].detach_()
+                        
             x = batch.text
             y = batch.target
             
@@ -177,16 +181,16 @@ class LstmLm(nn.Module):
                 
                 
             out, hid = self(x, hid if hid is not None else None)
-            valid_loss += loss(out.view(-1, self.vsize), y.view(-1))
-            nwords += y.ne(self.padidx).int().sum()
+            valid_loss += loss(out.view(-1, self.vsize), y.view(-1)).item()
+            nwords += y.ne(self.padidx).int().sum().item()
             
         if not infoToPlot is None:
-            infoToPlot['validPerp']+=[np.exp(valid_loss.item()/nwords.item())]
+            infoToPlot['validPerp']+=[np.exp(valid_loss/nwords)]
             if self.args.vis:
                 win = visdom_plot(viz, win, infoToPlot, valid=True)
             
             
-        return valid_loss.item(), nwords.item()
+        return valid_loss, nwords
 
     def generate_predictions(self, TEXT, outputDirectory=None, epoch=None, saveOutputs=False):
         if outputDirectory==None:

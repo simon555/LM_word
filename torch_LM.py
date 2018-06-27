@@ -42,6 +42,7 @@ import random
 import sys
 import math
 from local_models import lstm
+from splitcross import SplitCrossEntropyLoss
 
 import dill as pickle
 
@@ -68,7 +69,7 @@ else:
     root=os.path.join('/mnt','raid1','text','big_files','splitted')
 
 
-if args.vocab_size is not False:
+if args.vocab_size!=-1:
     size_of_voc=args.vocab_size
 else:
     size_of_voc='full'
@@ -107,7 +108,7 @@ try:
 except:
     print('build vocab...')
     
-    TEXT.build_vocab(train, max_size=args.vocab_size if args.vocab_size is not False else None )
+    TEXT.build_vocab(train, max_size=args.vocab_size if args.vocab_size is not -1 else None )
     
     print('vocab built, we save it for a later use')
     if not os.path.exists(vocab_folder):
@@ -128,7 +129,7 @@ padidx = TEXT.vocab.stoi["<pad>"]
 #build data iterators
 print('build iterators...')
 train_iter, valid_iter, test_iter = torchtext.data.BPTTIterator.splits(
-    (train, valid, test), batch_size=args.bsz, bptt_len=args.bptt, repeat=False)
+    (train, valid, test), batch_size=args.bsz, bptt_len=args.bptt, repeat=False, shuffle=True)
 
 
 
@@ -265,16 +266,33 @@ if __name__ == "__main__":
     weight[padidx] = 0
     if torch.cuda.is_available():
         weight = weight.cuda()
+        
+    splits = []
+    ntokens=len(TEXT.vocab.itos)
+    if ntokens > 500000:
+        # One Billion
+        # This produces fairly even matrix mults for the buckets:
+        # 0: 11723136, 1: 10854630, 2: 11270961, 3: 11219422
+        splits = [4200, 35000, 180000]
+    elif ntokens > 75000:
+        # WikiText-103
+        splits = [2800, 20000, 76000]
+    print('Using', splits)
+    #criterion = SplitCrossEntropyLoss(args.emsize, splits=splits, verbose=False)
     loss = nn.CrossEntropyLoss(weight=V(weight), size_average=False)
     
     if torch.cuda.is_available():
         print('with cuda!')
         loss=loss.cuda()
+        #criterion=criterion.cuda()
 
 
     #define optimizer
     print('define optimizer...')
     params = [p for p in model.parameters() if p.requires_grad]
+    #params += list(criterion.parameters())
+    
+    
     if args.optim == "Adam":
         optimizer = optim.Adam(
             params, lr = args.lr, weight_decay = args.wd, betas=(args.b1, args.b2))
