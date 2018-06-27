@@ -14,7 +14,7 @@ nltk.download('punkt')
 from nltk.tokenize import sent_tokenize, word_tokenize
 from progressbar import *              
 import argparse
-
+from tqdm import tqdm
 
 widgets = ['Text Analyze: ', Percentage(), ' ', Bar(marker='0',left='[',right=']'),
            ' ', ETA(), ' ', FileTransferSpeed()] #see docs for other options
@@ -24,15 +24,27 @@ parser = argparse.ArgumentParser()
 
 parser.add_argument("-root", default = './data/splitted/smallData/train/', help="directory where the dataset lays", type=str)
 
-parser.add_argument("-fileName", default="train", type=str)
+parser.add_argument("-fileName", default="smallData", type=str)
 parser.add_argument("-extension", default=".txt", type=str)
 
 parser.add_argument("-Nsamples", default=100000, type=int)
 parser.add_argument("-bins", default=50, type=int)
 parser.add_argument("-Pkeep", default=0.5, type=float)
 
+if os.name=='nt':
+    default_path_to_save='./../stats/smallData/'
+else:
+    default_path_to_save=='./../stats/springer_cui_tokenized/'
+    
+parser.add_argument("-path_to_save", default=default_path_to_save, type=str)
 
 
+if os.name=='nt':
+    default_path_to_TEXT='./../data/splitted/smallData/vocab/word/vocab_full_word.pickle'
+else:
+    default_path_to_TEXT==os.path.join('/mnt','raid1','text','big_files','splitted','springer_cui_tokenized','vocab','word','vocab_1000_word.pickle')
+    
+parser.add_argument("-path_to_TEXT", default=default_path_to_TEXT, type=str)
 
 
 args = parser.parse_args()
@@ -41,8 +53,8 @@ fileName=args.fileName+args.extension
 root=args.root
 outputDir='./stats/{}/'.format(args.fileName)
 
-if not os.path.exists(outputDir):
-    os.makedirs(outputDir)
+#if not os.path.exists(outputDir):
+#    os.makedirs(outputDir)
     
     
 Nsamples=args.Nsamples
@@ -53,6 +65,64 @@ endOfSentence= ['.', '!', '?']
 fileText=os.path.join(root, fileName)
 
 
+def get_stats(TEXT_path=args.path_to_TEXT,path_to_save=args.path_to_save):
+    import dill as pickle
+    TEXT=pickle.load(open(TEXT_path,'rb'))
+    
+    
+    freqs=[]
+    total_words=0
+    for _,value in TEXT.vocab.freqs.items():
+        freqs+=[value]
+        total_words+=value
+    
+    freqs=-np.sort(-np.array(freqs))
+    
+    pl.clf()
+    figure=pl.figure(0)
+    pl.plot(freqs)
+    pl.title('word appearance')
+    pl.ylabel('#number of times')  
+    pl.xlabel('#word index')
+    pl.savefig(path_to_save + 'wordFreq.png') 
+    
+    check=[70,75,80,85,90,95,98,99, 99.5, 99.9]
+    checks=iter(check)
+    min_size_voc=[]
+    
+    thresh=next(checks)
+    total=0
+    local_number=0
+    for value in tqdm(freqs):
+        local_number+=1
+        total+=value
+        if total>thresh*0.01*total_words:
+            min_size_voc+=[local_number]
+            print('total seen ', total)
+            print('percentage ', thresh*0.01*total_words)
+            try:
+                thresh=next(checks)
+                print('new thresh ', thresh)
+            except:
+                break
+    pl.clf()
+    figure=pl.figure(1)
+    pl.plot(check, min_size_voc)
+    pl.title('min number of voc_size to match a % of the initial vocabulary')
+    pl.xlabel('percentage of vocabulary')
+    pl.ylabel('voc_size')
+    pl.legend()
+    pl.savefig(path_to_save + 'percentage_voc.png') 
+
+    
+    info='total size of corpus {} \n'.format(total_words)
+    for i in range(len(check)):
+        info+='% of voc : {} \t min voc_size : {} \n'.format(check[i], min_size_voc[i])
+    print(info)
+    with open(path_to_save + 'info_percentage_voc.txt','w') as file:
+        file.write(info)
+    
+    
 
 
 def specialAppend(listOfValues, elt, Nsamples=Nsamples):
@@ -264,8 +334,8 @@ def display(dataFile=outputDir + 'dataStats.pkl' , outputDir=outputDir, bins=bin
     
     
     
-dataStats=analyze(fileText)   
-display()    
+#dataStats=analyze(fileText)   
+#display()    
     
                 
             

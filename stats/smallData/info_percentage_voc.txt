@@ -1,0 +1,10 @@
+% of voc : 70 	 min voc_size : 272 
+% of voc : 75 	 min voc_size : 391 
+% of voc : 80 	 min voc_size : 587 
+% of voc : 85 	 min voc_size : 936 
+% of voc : 90 	 min voc_size : 1691 
+% of voc : 95 	 min voc_size : 4352 
+% of voc : 98 	 min voc_size : 12359 
+% of voc : 99 	 min voc_size : 17281 
+% of voc : 99.5 	 min voc_size : 19742 
+% of voc : 99.9 	 min voc_size : 21710 

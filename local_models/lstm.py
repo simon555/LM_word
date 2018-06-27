@@ -142,7 +142,7 @@ class LstmLm(nn.Module):
                 
             if batch_id % self.args.Nplot == 0:
                 if not infoToPlot is None:
-                    infoToPlot['trainPerp']+=[np.exp(train_loss.item()/nwords]
+                    infoToPlot['trainPerp']+=[np.exp(train_loss.item()/nwords)]
                 
                 sampled_sentences=self.generate_predictions(TEXT)
                 #print(sampled_sentences)
@@ -157,7 +157,7 @@ class LstmLm(nn.Module):
             batch_id+=1
         self.trainingEpochs+=1
         
-        return train_loss.item(), nwords.item()
+        return train_loss.item(), nwords
 
     def validate(self, iter, loss, viz=None, win=None, infoToPlot=None):
         self.eval()
@@ -236,7 +236,7 @@ class LstmLm(nn.Module):
         for i in range(batch_number):
                 expected_output_words[i]=[TEXT.vocab.itos[x] for x in expected_sentence[:,i].data.tolist()]
                 #print(output_words)          
-      
+        #print(expected_output_words)
         
        
         if saveOutputs:
@@ -252,7 +252,13 @@ class LstmLm(nn.Module):
         for batch_index in range(batch_number):          
             
             #then we run the model using the  computed hidden states
-            input_word=expected_output_words[batch_index][20]
+            #len_sent=len(expected_output_words[batch_index])
+            #max_index=min(len_sent, 20)
+            max_index=len(expected_output_words[batch_index])
+            #print('max index ', max_index)
+            index=min(max_index-1, 20)
+            
+            input_word=expected_output_words[batch_index][index]
             
             #we select the correct hidden state for the batch
             #because next_N_words take a single word as input
