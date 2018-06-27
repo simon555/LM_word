@@ -5,7 +5,7 @@ import os
 
 
 
-from progressbar import *  
+ 
 import fileinput
 import string
 from tqdm import tqdm
@@ -44,7 +44,7 @@ else:
 if os.name=='nt':
     input_folder='./../data/splitted/smallData/'
 else:
-    input_folder=os.path.join('/mnt','raid1','text','big_files','splitted','springer_cui_tokenized')
+    input_folder=os.path.join('/mnt','raid1','text','big_files','splitted','springer_cui_tokenized/')
     
 
 

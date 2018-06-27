@@ -1,0 +1,36 @@
+experience done on : 27/06/2018 at 17:49:57  
+directoryOut  /mnt/raid1/Simon/projects/LM_word/results/LstmLm_springer_cui_tokenized_Exp1 
+         lrd          0.25 
+directoryData  /mnt/raid1/Simon/projects/LM_word/results/LstmLm_springer_cui_tokenized_Exp1/data 
+     nlayers             1 
+directoryScripts  /mnt/raid1/Simon/projects/LM_word/results/LstmLm_springer_cui_tokenized_Exp1/scrpits 
+     dataset  springer_cui_tokenized 
+     maxnorm             0 
+        cuda             1 
+  vocab_size           100 
+       nonag             0 
+         mom          0.99 
+          b2         0.999 
+       model        LstmLm 
+serverVisdom  http://localhost 
+     dropout             0 
+  portVisdom          8097 
+          lr          0.01 
+  grainLevel          word 
+       devid             6 
+    dataPath  C://Users//simon//Desktop//HMS//projects//LM_word//data//splitted//smallData//  
+  tieweights             1 
+         vis             1 
+      epochs            19 
+        bptt            25 
+       optim          Adam 
+          b1           0.9 
+        nhid            10 
+          dm             0 
+ Nexperience             1 
+          wd        0.0001 
+         eps         1e-08 
+       Nplot           300 
+         bsz            16 
+        clip             5 
+directoryCkpt  /mnt/raid1/Simon/projects/LM_word/results/LstmLm_springer_cui_tokenized_Exp1/checkpoint 

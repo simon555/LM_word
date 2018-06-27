@@ -1,0 +1,11 @@
+total size of corpus 1917828021 
+% of voc : 70 	 min voc_size : 2118 
+% of voc : 75 	 min voc_size : 3274 
+% of voc : 80 	 min voc_size : 5198 
+% of voc : 85 	 min voc_size : 8818 
+% of voc : 90 	 min voc_size : 17831 
+% of voc : 95 	 min voc_size : 59715 
+% of voc : 98 	 min voc_size : 265387 
+% of voc : 99 	 min voc_size : 712739 
+% of voc : 99.5 	 min voc_size : 1746032 
+% of voc : 99.9 	 min voc_size : 6380821 

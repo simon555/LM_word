@@ -8,16 +8,16 @@ mpl.use('Agg')
 import matplotlib.pyplot as pl
 import numpy as np
 
-import nltk
-nltk.download('punkt')
+#import nltk
+#nltk.download('punkt')
 
-from nltk.tokenize import sent_tokenize, word_tokenize
-from progressbar import *              
+#from nltk.tokenize import sent_tokenize, word_tokenize
+              
 import argparse
 from tqdm import tqdm
 
-widgets = ['Text Analyze: ', Percentage(), ' ', Bar(marker='0',left='[',right=']'),
-           ' ', ETA(), ' ', FileTransferSpeed()] #see docs for other options
+#widgets = ['Text Analyze: ', Percentage(), ' ', Bar(marker='0',left='[',right=']'),
+#           ' ', ETA(), ' ', FileTransferSpeed()] #see docs for other options
 
 
 parser = argparse.ArgumentParser()
@@ -34,7 +34,7 @@ parser.add_argument("-Pkeep", default=0.5, type=float)
 if os.name=='nt':
     default_path_to_save='./../stats/smallData/'
 else:
-    default_path_to_save=='./../stats/springer_cui_tokenized/'
+    default_path_to_save='./../stats/springer_cui_tokenized/'
     
 parser.add_argument("-path_to_save", default=default_path_to_save, type=str)
 
@@ -42,7 +42,7 @@ parser.add_argument("-path_to_save", default=default_path_to_save, type=str)
 if os.name=='nt':
     default_path_to_TEXT='./../data/splitted/smallData/vocab/word/vocab_full_word.pickle'
 else:
-    default_path_to_TEXT=os.path.join('/mnt','raid1','text','big_files','splitted','springer_cui_tokenized','vocab','word','vocab_1000_word.pickle')
+    default_path_to_TEXT=os.path.join('/mnt','raid1','text','big_files','splitted','springer_cui_tokenized','vocab','word','vocab_100_word.pickle')
     
 parser.add_argument("-path_to_TEXT", default=default_path_to_TEXT, type=str)
 
