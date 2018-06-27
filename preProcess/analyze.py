@@ -42,7 +42,7 @@ parser.add_argument("-path_to_save", default=default_path_to_save, type=str)
 if os.name=='nt':
     default_path_to_TEXT='./../data/splitted/smallData/vocab/word/vocab_full_word.pickle'
 else:
-    default_path_to_TEXT==os.path.join('/mnt','raid1','text','big_files','splitted','springer_cui_tokenized','vocab','word','vocab_1000_word.pickle')
+    default_path_to_TEXT=os.path.join('/mnt','raid1','text','big_files','splitted','springer_cui_tokenized','vocab','word','vocab_1000_word.pickle')
     
 parser.add_argument("-path_to_TEXT", default=default_path_to_TEXT, type=str)
 

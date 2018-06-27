@@ -41,10 +41,15 @@ else:
 #    
 #
     
-input_folder="C://Users//simon//Desktop//HMS//projects//LM_word//data//splitted//smallData//"
+if os.name=='nt':
+    input_folder='./../data/splitted/smallData/'
+else:
+    input_folder=os.path.join('/mnt','raid1','text','big_files','splitted','springer_cui_tokenized')
+    
+
 
 #fileText=os.path.join(inputDir, fileName)
-def preProcess(input_folder=input_folder, output_folder=input_folder):
+def preProcess(input_folder=input_folder):
     train_data=input_folder + 'train.txt'
     test_data=input_folder + 'test.txt'
     valid_data=input_folder + 'valid.txt'
