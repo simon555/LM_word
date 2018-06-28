@@ -111,6 +111,7 @@ class LstmLm(nn.Module):
         batch_id=0
         print('using a vocab of size : ' )
         for batch in tqdm(iter):
+            print('entering batch')
             self.trainingBatches+=1
             
             if hid is not None:
@@ -154,6 +155,7 @@ class LstmLm(nn.Module):
                 
                 self.train()
                 
+            print('finishing batch')
 
             batch_id+=1
         self.trainingEpochs+=1
