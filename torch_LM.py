@@ -95,7 +95,7 @@ except:
     print('load data...')
     TEXT = torchtext.data.Field()    
     
-print('build iterator...')
+print('build dataset...')
 train, valid, test = torchtext.datasets.LanguageModelingDataset.splits(
     path=pathToData, train="train.txt", validation="valid.txt", test="valid.txt", text_field=TEXT)
     #path="data/",

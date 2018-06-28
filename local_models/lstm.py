@@ -110,6 +110,7 @@ class LstmLm(nn.Module):
         hid = None
         batch_id=0
         for batch in tqdm(iter):
+            print('entering batch')
             self.trainingBatches+=1
             
             if hid is not None:
@@ -128,7 +129,7 @@ class LstmLm(nn.Module):
             bloss = loss(out.view(-1, self.vsize), y.view(-1))
             
             bloss.backward()
-            train_loss += bloss
+            train_loss += bloss.item()
             # bytetensor.sum overflows, so cast to int
             nwords += y.ne(self.padidx).int().sum().item()
             if self.args.clip > 0:
@@ -142,7 +143,7 @@ class LstmLm(nn.Module):
                 
             if batch_id % self.args.Nplot == 0:
                 if not infoToPlot is None:
-                    infoToPlot['trainPerp']+=[np.exp(train_loss.item()/nwords)]
+                    infoToPlot['trainPerp']+=[np.exp(train_loss/nwords)]
                 
                 sampled_sentences=self.generate_predictions(TEXT)
                 #print(sampled_sentences)
@@ -153,11 +154,12 @@ class LstmLm(nn.Module):
                 
                 self.train()
                 
-            
+            print('finishing batch')
+
             batch_id+=1
         self.trainingEpochs+=1
         
-        return train_loss.item(), nwords
+        return train_loss, nwords
 
     def validate(self, iter, loss, viz=None, win=None, infoToPlot=None):
         self.eval()
