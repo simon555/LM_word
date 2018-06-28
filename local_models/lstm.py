@@ -109,6 +109,7 @@ class LstmLm(nn.Module):
 
         hid = None
         batch_id=0
+        print('using a vocab of size : ' )
         for batch in tqdm(iter):
             print('entering batch')
             self.trainingBatches+=1
