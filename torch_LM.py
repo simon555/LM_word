@@ -131,8 +131,11 @@ print('build iterators...')
 train_iter, valid_iter, test_iter = torchtext.data.BPTTIterator.splits(
     (train, valid, test), batch_size=args.bsz, bptt_len=args.bptt, repeat=False, shuffle=True, device=0)
 
+print('size of train dataset : ', sys.getsizeof(train))
+print('size of train iterator : ', sys.getsizeof(train_iter))
 
-
+print('removing the datasets from the memory')
+del train, test, valid
 # =============================================================================
 # Build the output directories for this experiment
 # =============================================================================
