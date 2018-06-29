@@ -1,36 +1,36 @@
-experience done on : 28/06/2018 at 11:04:30  
-       Nplot           300 
+experience done on : 29/06/2018 at 16:31:35  
+         lrd          0.25 
+directoryData  C:\Users\simon\Desktop\HMS\projects\LM_word\results\LstmLm_smallData_Exp3\data 
+         mom          0.99 
+     dropout             0 
+         eps         1e-08 
+       devid             0 
+    dataPath  C://Users//simon//Desktop//HMS//projects//LM_word//data//splitted//smallData//  
   vocab_size           100 
-      epochs            19 
+         bsz             4 
+          dm             0 
+  tieweights             1 
+serverVisdom  http://localhost 
+         vis             1 
        optim          Adam 
-     dataset     smallData 
+directoryScripts  C:\Users\simon\Desktop\HMS\projects\LM_word\results\LstmLm_smallData_Exp3\scrpits 
+  grainLevel          word 
           b2         0.999 
-        bptt            25 
+ Nexperience             3 
+      epochs            19 
+directoryCkpt  C:\Users\simon\Desktop\HMS\projects\LM_word\results\LstmLm_smallData_Exp3\checkpoint 
+  portVisdom          8097 
+       nonag             0 
+       Nplot           300 
+          b1           0.9 
        model        LstmLm 
      maxnorm             0 
-directoryScripts  C:\Users\simon\Desktop\HMS\projects\LM_word\results\LstmLm_smallData_Exp3\scrpits 
-         bsz            16 
-directoryData  C:\Users\simon\Desktop\HMS\projects\LM_word\results\LstmLm_smallData_Exp3\data 
-         eps         1e-08 
-          dm             0 
-     dropout             0 
-         vis             1 
-     nlayers             1 
-  tieweights             1 
-  grainLevel          word 
 directoryOut  C:\Users\simon\Desktop\HMS\projects\LM_word\results\LstmLm_smallData_Exp3 
         nhid            10 
-         mom          0.99 
           lr          0.01 
-        clip             5 
-       nonag             0 
-    dataPath  C://Users//simon//Desktop//HMS//projects//LM_word//data//splitted//smallData//  
-       devid             0 
-serverVisdom  http://localhost 
-          b1           0.9 
-directoryCkpt  C:\Users\simon\Desktop\HMS\projects\LM_word\results\LstmLm_smallData_Exp3\checkpoint 
- Nexperience             3 
-  portVisdom          8097 
-        cuda             1 
           wd        0.0001 
-         lrd          0.25 
+     dataset     smallData 
+     nlayers             1 
+        bptt            25 
+        cuda             1 
+        clip             5 

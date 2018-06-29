@@ -337,10 +337,7 @@ def display(dataFile=outputDir + 'dataStats.pkl' , outputDir=outputDir, bins=bin
 #dataStats=analyze(fileText)   
 #display()    
     
-                
-            
-        
-     
+
 
 
         

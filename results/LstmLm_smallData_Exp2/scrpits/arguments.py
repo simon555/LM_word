@@ -40,7 +40,7 @@ def get_args():
 
 
     parser.add_argument("--model", choices=["NnLm", "LstmLm"], default="LstmLm")
-    parser.add_argument("--nhid", type=int, default=1)
+    parser.add_argument("--nhid", type=int, default=10)
     parser.add_argument("--nlayers", type=int, default=1)
 
     parser.add_argument("--tieweights", default=True)
@@ -55,8 +55,8 @@ def get_args():
     parser.add_argument("--lrd", type=float, default=0.25)
     parser.add_argument("--wd", type=float, default=1e-4)
 
-    parser.add_argument("--bsz", type=int, default=2)
-    parser.add_argument("--bptt", type=int, default=5)
+    parser.add_argument("--bsz", type=int, default=4)
+    parser.add_argument("--bptt", type=int, default=25)
     parser.add_argument("--clip", type=float, default=5)
 
     # Adam parameters

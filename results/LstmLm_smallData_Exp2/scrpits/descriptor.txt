@@ -1,36 +1,36 @@
-experience done on : 28/06/2018 at 11:03:42  
-        clip             5 
-        cuda             1 
-     dataset     smallData 
+experience done on : 29/06/2018 at 16:31:16  
          lrd          0.25 
-       Nplot           300 
-       devid             0 
-  portVisdom          8097 
-     nlayers             1 
-     dropout             0 
-         vis             1 
-        bptt             5 
-        nhid             1 
-directoryOut  C:\Users\simon\Desktop\HMS\projects\LM_word\results\LstmLm_smallData_Exp2 
-       nonag             0 
 directoryData  C:\Users\simon\Desktop\HMS\projects\LM_word\results\LstmLm_smallData_Exp2\data 
-          wd        0.0001 
-  vocab_size           100 
-  grainLevel          word 
- Nexperience             2 
-          b1           0.9 
-         eps         1e-08 
-directoryCkpt  C:\Users\simon\Desktop\HMS\projects\LM_word\results\LstmLm_smallData_Exp2\checkpoint 
-         bsz             2 
-     maxnorm             0 
-       optim          Adam 
-    dataPath  C://Users//simon//Desktop//HMS//projects//LM_word//data//splitted//smallData//  
-          dm             0 
-       model        LstmLm 
-serverVisdom  http://localhost 
-      epochs            19 
-directoryScripts  C:\Users\simon\Desktop\HMS\projects\LM_word\results\LstmLm_smallData_Exp2\scrpits 
          mom          0.99 
-          b2         0.999 
+     dropout             0 
+         eps         1e-08 
+       devid             0 
+    dataPath  C://Users//simon//Desktop//HMS//projects//LM_word//data//splitted//smallData//  
+  vocab_size           100 
+         bsz             4 
+          dm             0 
   tieweights             1 
+serverVisdom  http://localhost 
+         vis             1 
+       optim          Adam 
+directoryScripts  C:\Users\simon\Desktop\HMS\projects\LM_word\results\LstmLm_smallData_Exp2\scrpits 
+  grainLevel          word 
+          b2         0.999 
+ Nexperience             2 
+      epochs            19 
+directoryCkpt  C:\Users\simon\Desktop\HMS\projects\LM_word\results\LstmLm_smallData_Exp2\checkpoint 
+  portVisdom          8097 
+       nonag             0 
+       Nplot           300 
+          b1           0.9 
+       model        LstmLm 
+     maxnorm             0 
+directoryOut  C:\Users\simon\Desktop\HMS\projects\LM_word\results\LstmLm_smallData_Exp2 
+        nhid            10 
           lr          0.01 
+          wd        0.0001 
+     dataset     smallData 
+     nlayers             1 
+        bptt            25 
+        cuda             1 
+        clip             5 

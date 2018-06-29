@@ -43,9 +43,8 @@ import sys
 import math
 from local_models import lstm
 from splitcross import SplitCrossEntropyLoss
-
+import lazyContiguousDataset
 import dill as pickle
-
 
 
 random.seed(1111)
@@ -96,8 +95,8 @@ except:
     TEXT = torchtext.data.Field()    
     
 print('build dataset...')
-train, valid, test = torchtext.datasets.LanguageModelingDataset.splits(
-    path=pathToData, train="train.txt", validation="valid.txt", test="valid.txt", text_field=TEXT)
+train, valid, test = lazyContiguousDataset.LanguageModelingDataset.splits(
+    path=pathToData, train="train.txt", validation="valid.txt", test="valid.txt", args=args, text_field=TEXT)
     #path="data/",
     #train="train.txt", validation="valid.txt", test="test.txt", text_field=TEXT)
     
@@ -125,17 +124,15 @@ except:
 padidx = TEXT.vocab.stoi["<pad>"]
 
 
-
 #build data iterators
 print('build iterators...')
-train_iter, valid_iter, test_iter = torchtext.data.BPTTIterator.splits(
+train_iter, valid_iter, test_iter = lazyContiguousDataset.lazy_BPTTIterator.splits(
     (train, valid, test), batch_size=args.bsz, bptt_len=args.bptt, repeat=False, shuffle=True, device=0)
 
-print('size of train dataset : ', sys.getsizeof(train))
-print('size of train iterator : ', sys.getsizeof(train_iter))
 
-print('removing the datasets from the memory')
-del train, test, valid
+
+#print('removing the datasets from the memory')
+#del train, test, valid
 # =============================================================================
 # Build the output directories for this experiment
 # =============================================================================
@@ -280,7 +277,7 @@ if __name__ == "__main__":
     elif ntokens > 75000:
         # WikiText-103
         splits = [2800, 20000, 76000]
-    print('Using', splits)
+    print('Using', splits)  
     #criterion = SplitCrossEntropyLoss(args.emsize, splits=splits, verbose=False)
     loss = nn.CrossEntropyLoss(weight=V(weight), size_average=False)
     
@@ -303,6 +300,7 @@ if __name__ == "__main__":
         optimizer = optim.SGD(
             params, lr = args.lr, weight_decay = args.wd,
             nesterov = not args.nonag, momentum = args.mom, dampening = args.dm)
+    
     schedule = optim.lr_scheduler.ReduceLROnPlateau(
         optimizer, patience=1, factor=args.lrd, threshold=1e-3)
 
@@ -314,7 +312,7 @@ if __name__ == "__main__":
         train_loss, train_words = model.train_epoch(
             iter=train_iter, loss=loss, optimizer=optimizer,infoToPlot=infoToPlot, viz=viz, win=win, TEXT=TEXT)
         valid_loss, valid_words = model.validate(valid_iter, loss, infoToPlot=infoToPlot, viz=viz, win=win)
-        schedule.step(valid_loss)
+        schedule.step(valid_loss) 
         print("Train: {}, Valid: {}".format(
             math.exp(train_loss / train_words), math.exp(valid_loss / valid_words)))
         

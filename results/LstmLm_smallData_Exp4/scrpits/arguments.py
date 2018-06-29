@@ -55,7 +55,7 @@ def get_args():
     parser.add_argument("--lrd", type=float, default=0.25)
     parser.add_argument("--wd", type=float, default=1e-4)
 
-    parser.add_argument("--bsz", type=int, default=16)
+    parser.add_argument("--bsz", type=int, default=4)
     parser.add_argument("--bptt", type=int, default=25)
     parser.add_argument("--clip", type=float, default=5)
 

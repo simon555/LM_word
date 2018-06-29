@@ -41,6 +41,7 @@ class LstmLm(nn.Module):
             maxNorm=None
         else:
             maxNorm=args.maxnorm
+            
         self.lut = nn.Embedding(self.vsize, self.nhid, max_norm=maxNorm)
         self.rnn = nn.LSTM(
             input_size=self.nhid,
@@ -109,8 +110,12 @@ class LstmLm(nn.Module):
 
         hid = None
         batch_id=0
-        print('using a vocab of size : ' )
-        for batch in tqdm(iter):
+        print('using a vocab of size : ', self.vsize)
+        bar = tqdm(total=int(iter.dataset.numberOfTokens/self.args.bsz)+10)
+        countBar=0
+        for batch in iter:
+            bar.update(countBar)
+            countBar+=1
             self.trainingBatches+=1
             
             if hid is not None:
@@ -125,8 +130,11 @@ class LstmLm(nn.Module):
                 x=x.cuda()
                 y=y.cuda()
                 
+           
             out, hid = self(x, hid if hid is not None else None)
-            bloss = loss(out.view(-1, self.vsize), y.view(-1))
+            #print('hid', hid[0].shape)
+            #print('hid', hid[1].shape)
+            bloss = loss(out.view(-1, self.vsize), y.contiguous().view(-1))
             
             bloss.backward()
             train_loss += bloss.item()

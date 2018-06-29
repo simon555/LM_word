@@ -1,36 +1,36 @@
-experience done on : 28/06/2018 at 11:04:57  
-        bptt           100 
-       devid             0 
-         lrd          0.25 
-  grainLevel          word 
-         bsz            16 
-         mom          0.99 
-directoryCkpt  C:\Users\simon\Desktop\HMS\projects\LM_word\results\LstmLm_smallData_Exp4\checkpoint 
-  portVisdom          8097 
-directoryData  C:\Users\simon\Desktop\HMS\projects\LM_word\results\LstmLm_smallData_Exp4\data 
-    dataPath  C://Users//simon//Desktop//HMS//projects//LM_word//data//splitted//smallData//  
-       nonag             0 
-         eps         1e-08 
-     maxnorm             0 
-          dm             0 
-directoryOut  C:\Users\simon\Desktop\HMS\projects\LM_word\results\LstmLm_smallData_Exp4 
-  tieweights             1 
-       optim          Adam 
-          b1           0.9 
-        clip             5 
-          wd        0.0001 
-directoryScripts  C:\Users\simon\Desktop\HMS\projects\LM_word\results\LstmLm_smallData_Exp4\scrpits 
-     nlayers             1 
-     dataset     smallData 
-      epochs            19 
-          lr          0.01 
-        nhid            10 
-       model        LstmLm 
-        cuda             1 
-         vis             1 
+experience done on : 29/06/2018 at 16:35:08  
  Nexperience             4 
-serverVisdom  http://localhost 
-  vocab_size           100 
+directoryScripts  C:\Users\simon\Desktop\HMS\projects\LM_word\results\LstmLm_smallData_Exp4\scrpits 
        Nplot           300 
-          b2         0.999 
+    dataPath  C://Users//simon//Desktop//HMS//projects//LM_word//data//splitted//smallData//  
+  tieweights             1 
+        nhid            10 
+          b1           0.9 
+         bsz             4 
+     dataset     smallData 
+         eps         1e-08 
+  portVisdom          8097 
+     nlayers             1 
+  grainLevel          word 
      dropout             0 
+        cuda             1 
+       optim          Adam 
+          wd        0.0001 
+       nonag             0 
+        clip             5 
+serverVisdom  http://localhost 
+         mom          0.99 
+       model        LstmLm 
+      epochs            19 
+directoryOut  C:\Users\simon\Desktop\HMS\projects\LM_word\results\LstmLm_smallData_Exp4 
+          dm             0 
+         vis             1 
+          b2         0.999 
+     maxnorm             0 
+directoryData  C:\Users\simon\Desktop\HMS\projects\LM_word\results\LstmLm_smallData_Exp4\data 
+        bptt            25 
+          lr          0.01 
+         lrd          0.25 
+  vocab_size           100 
+       devid             0 
+directoryCkpt  C:\Users\simon\Desktop\HMS\projects\LM_word\results\LstmLm_smallData_Exp4\checkpoint 
