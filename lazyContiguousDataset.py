@@ -4,6 +4,11 @@ from torchtext.data.iterator import Iterator
 from torchtext.data.dataset import Dataset
 from torchtext.data.batch import Batch
 import math
+from collections import Counter, OrderedDict
+from itertools import chain
+
+from tqdm import tqdm
+
 
 import io
 from tqdm import tqdm
@@ -24,6 +29,8 @@ class LanguageModelingDataset(data.Dataset):
             Remaining keyword arguments: Passed to the constructor of
                 data.Dataset.
         """
+        self.TEXT=text_field
+        self.args = args
         fields = [('text', text_field)]
         
         self.numberOfTokens=0
@@ -49,13 +56,13 @@ class LanguageModelingDataset(data.Dataset):
         
         
         
-        #make the text       
+        #make the batch text generator       
         self.text=self.text_gen()
-        self.examples = [data.Example.fromlist([self.text], fields)]
-            
-            
-    
         
+        
+        #toy example used only to initiate the class with the attributes of the text.Dataset class
+        self.examples = [data.Example.fromlist([self.text.__next__()], fields)]            
+                 
         super(LanguageModelingDataset, self).__init__(
             self.examples, fields, **kwargs)
         
@@ -66,6 +73,23 @@ class LanguageModelingDataset(data.Dataset):
             for lazy_gen in self.list_of_generators :
                 text+=lazy_gen.__next__()
             yield(text)
+    
+    
+    def build_vocab(self, **kwargs):
+        counter = Counter()        
+        for i in tqdm(range(math.ceil(self.numberOfTokens / self.args.bsz/self.args.bptt))):
+            x=self.text.__next__()
+            if not self.TEXT.sequential:
+                x = [x]
+            counter.update(x)
+        specials = list(OrderedDict.fromkeys(
+            tok for tok in [self.TEXT.unk_token, self.TEXT.pad_token, self.TEXT.init_token,
+                            self.TEXT.eos_token]
+            if tok is not None))
+        self.TEXT.vocab = self.TEXT.vocab_cls(counter, specials=specials, **kwargs)
+    
+    
+ 
             
             
             
@@ -87,7 +111,7 @@ class LazyGen():
             with io.open(self.path, encoding=self.encoding) as f:
                 for line in f:
                     for token in self.text_field.preprocess(line):
-                        if current_token>=self.start_at_token:
+                        if current_token>=self.start_at_token:                  
                             output.append(token)
                             current_size += 1
                             
@@ -111,7 +135,7 @@ class LazyGen():
                                 yield(tmp)
                     else:
                         current_token+=1
-        
+                        
         
 
 class lazy_BPTTIterator(Iterator):
@@ -143,28 +167,29 @@ class lazy_BPTTIterator(Iterator):
 
     def __init__(self, dataset, batch_size, bptt_len, **kwargs):
         self.bptt_len = bptt_len
+        self.bsz=batch_size
         super(lazy_BPTTIterator, self).__init__(dataset, batch_size, **kwargs)
 
     
     def __len__(self):
         if self.batch_size_fn is not None:
             raise NotImplementedError
-        return math.ceil(len(self.dataset.numberOfTokens) / self.batch_size)
+        return math.ceil(self.dataset.numberOfTokens / self.batch_size/self.bptt_len)
     
     
     def __iter__(self):
         TEXT = self.dataset.fields['text']                
         TEXT.eos_token = None
 
-        while True:        
-            for text in self.dataset.text:
+        while True:  
+            for _ in range(int(self.dataset.numberOfTokens/self.bsz/self.bptt_len)):
+                text=self.dataset.text.__next__()
                 
                 data = TEXT.numericalize(
                     [text], device=self.device, train=self.train)
                 data = data.view(self.batch_size, -1).t().contiguous()
                 dataset = Dataset(examples=self.dataset.examples, fields=[
                     ('text', TEXT), ('target', TEXT)])
-                self.iterations += 1
                 yield Batch.fromvars(
                     dataset, self.batch_size, train=self.train,
                     text=data[:,:-1],
@@ -172,5 +197,4 @@ class lazy_BPTTIterator(Iterator):
             if not self.repeat:
                 return
 
-        
-        
+ 

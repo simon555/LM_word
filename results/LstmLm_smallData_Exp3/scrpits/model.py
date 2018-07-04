@@ -18,6 +18,7 @@ import random
 from visualisation import visdom_plot
 import itertools
 import time
+import pickle
 
 
 #from local_models.log_uniform.log_uniform import LogUniformSampler
@@ -68,11 +69,11 @@ class LstmLm(nn.Module):
         hids, hid = self.rnn(emb, hid)
         # Detach hiddens to truncate the computational graph for BPTT.
         # Recall that hid = (h,c).
-        return self.proj(self.drop(hids)), tuple(map(lambda x: x.detach(), hid))
+        return (self.proj(self.drop(hids)), hid)
     
     def next_N_words(self, word, hid_, TEXT, length_to_predict):
         output=[]
-        
+        self.eval()
         for i in range(length_to_predict):
             wordIndex=TEXT.vocab.stoi[word]
             input_tensor=Variable(torch.LongTensor([[wordIndex]]))
@@ -95,13 +96,11 @@ class LstmLm(nn.Module):
 
     def repackage_hidden(self,h):
         """Wraps hidden states in new Variables, to detach them from their history."""
-        if type(h) == Variable:
-            return Variable(h.data)
-        else:
-            return tuple(self.repackage_hidden(v) for v in h)
+        for v in h:
+            v.detach_()
     
 
-    def train_epoch(self, iter, loss, optimizer, viz, win, TEXT, infoToPlot=None):
+    def train_epoch(self, iter, loss, optimizer, viz, win, TEXT, args, infoToPlot=None):
         self.train()
         self.trainingBatches=0
 
@@ -110,17 +109,15 @@ class LstmLm(nn.Module):
 
         hid = None
         batch_id=0
-        print('using a vocab of size : ', self.vsize)
-        bar = tqdm(total=int(iter.dataset.numberOfTokens/self.args.bsz)+10)
-        countBar=0
-        for batch in iter:
-            bar.update(countBar)
-            countBar+=1
+       
+        for batch in tqdm(iter):
             self.trainingBatches+=1
             
             if hid is not None:
-                hid[0].detach_()
-                hid[1].detach_()
+                #print(len(hid))
+                self.repackage_hidden(hid)
+                #hid[0].detach_()
+                #hid[1].detach_()
                 
             optimizer.zero_grad()
             x = batch.text
@@ -161,6 +158,10 @@ class LstmLm(nn.Module):
                     win = visdom_plot(viz, win, infoToPlot)
                 
                 self.train()
+            
+            if batch_id % 100 * self.args.Nplot == 0:
+                with open(os.path.join(args.directoryData,'data.pkl'), 'wb') as f:
+                    pickle.dump(infoToPlot, f, pickle.HIGHEST_PROTOCOL)
                 
 
             batch_id+=1
@@ -175,6 +176,7 @@ class LstmLm(nn.Module):
         nwords = 0
 
         hid = None
+        
         for batch in tqdm(iter):
             
             if hid is not None:
@@ -190,7 +192,7 @@ class LstmLm(nn.Module):
                 
                 
             out, hid = self(x, hid if hid is not None else None)
-            valid_loss += loss(out.view(-1, self.vsize), y.view(-1)).item()
+            valid_loss += loss(out.view(-1, self.vsize), y.contiguous().view(-1)).item()
             nwords += y.ne(self.padidx).int().sum().item()
             
         if not infoToPlot is None:
@@ -273,7 +275,7 @@ class LstmLm(nn.Module):
             #because next_N_words take a single word as input
             local_h=hidden[0][:,batch_index:batch_index+1,:]
             local_c=hidden[1][:,batch_index:batch_index+1,:]
-            local_hidden=(local_h, local_c)
+            local_hidden=(local_h.contiguous(), local_c.contiguous())
             
             output=self.next_N_words(input_word, local_hidden, TEXT, 80)
 

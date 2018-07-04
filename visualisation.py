@@ -8,9 +8,37 @@ import numpy as np
 matplotlib.rcParams.update({'font.size': 8})
 
 from torchvision.utils import make_grid
+from visdom import Visdom
 
-
-
+def load_from_results(path):
+    '''
+    open a viz server and plot the results obtained from the path of the saved info
+    '''
+    import pickle 
+    
+    infoToPlot=pickle.load(path)
+    
+    nameOfExp='' 
+    
+    splittedPath=path.split('/')
+    i=0
+    while len(nameOfExp) == 0 : 
+        nameOfExp=splittedPath[-i]
+        i+=1
+    
+    viz = Visdom(server='http://localhost',port=8097,env=nameOfExp)
+    win={'trainPerp':None,
+         'validPerp':None,
+         'input_sentence':None,
+         'expected_sentence':None,
+         'output_sentence':None}
+    
+    win=plotTrainPPL(infoToPlot['trainPerp'], viz, win)
+    
+    win=plotValidPPL(infoToPlot['validPerp'], viz, win)
+    
+    win=plotSampledSentences(infoToPlot['generated'], viz, win)
+    
 
 def plotTrainPPL(dataTrain, viz, win):  
     NTrain=len(dataTrain)    

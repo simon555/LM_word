@@ -69,6 +69,9 @@ def get_args():
     parser.add_argument("--dm", type=float, default=0)
     parser.add_argument("--nonag", default=False)
     
+    parser.add_argument("--lazyLoading", default=True)
+
+    
     args = parser.parse_args()
 
     args.cuda = args.cuda and torch.cuda.is_available()

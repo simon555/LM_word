@@ -8,7 +8,11 @@ print('parse arguments...')
 from arguments import get_args
 args = get_args()
 
+#handle boolean flags
+args.lazyLoading=False if args.lazyLoading=='False' else args.lazyLoading
+args.vis=False if args.vis=='False' else args.vis
 
+print('lazy : ', args.lazyLoading, type(args.lazyLoading))
 # =============================================================================
 # specifying the CUDA devide available on the server
 # =============================================================================
@@ -30,7 +34,6 @@ import torch
 import torch.nn as nn
 import torch.optim as optim
 import torch.nn.functional as F
-import pickle
 from torch.autograd import Variable as V
 from torch.nn import Parameter
 from torch.nn.utils import clip_grad_norm
@@ -95,8 +98,17 @@ except:
     TEXT = torchtext.data.Field()    
     
 print('build dataset...')
-train, valid, test = lazyContiguousDataset.LanguageModelingDataset.splits(
-    path=pathToData, train="train.txt", validation="valid.txt", test="valid.txt", args=args, text_field=TEXT)
+
+
+if args.lazyLoading is False:
+    train, valid, test = torchtext.datasets.LanguageModelingDataset.splits(
+path=pathToData, train="train.txt", validation="valid.txt", test="valid.txt", text_field=TEXT)
+
+
+else:
+    print('using lazy loading')
+    train, valid, test = lazyContiguousDataset.LanguageModelingDataset.splits(
+            path=pathToData, train="train.txt", validation="valid.txt", test="valid.txt", args=args, text_field=TEXT)
     #path="data/",
     #train="train.txt", validation="valid.txt", test="test.txt", text_field=TEXT)
     
@@ -107,8 +119,11 @@ try:
 except:
     print('build vocab...')
     
-    TEXT.build_vocab(train, max_size=args.vocab_size if args.vocab_size is not -1 else None )
-    
+    if args.lazyLoading is False:
+        TEXT.build_vocab(train, max_size=args.vocab_size if args.vocab_size is not -1 else None )
+    else:
+        train.build_vocab(max_size=args.vocab_size if args.vocab_size is not -1 else None )
+
     print('vocab built, we save it for a later use')
     if not os.path.exists(vocab_folder):
         os.makedirs(vocab_folder)
@@ -126,7 +141,12 @@ padidx = TEXT.vocab.stoi["<pad>"]
 
 #build data iterators
 print('build iterators...')
-train_iter, valid_iter, test_iter = lazyContiguousDataset.lazy_BPTTIterator.splits(
+if args.lazyLoading is False:
+    train_iter, valid_iter, test_iter = torchtext.data.BPTTIterator.splits(
+    (train, valid, test), batch_size=args.bsz, bptt_len=args.bptt, repeat=False)
+
+else:
+    train_iter, valid_iter, test_iter = lazyContiguousDataset.lazy_BPTTIterator.splits(
     (train, valid, test), batch_size=args.bsz, bptt_len=args.bptt, repeat=False, shuffle=True, device=0)
 
 
@@ -310,7 +330,7 @@ if __name__ == "__main__":
     for epoch in range(args.epochs):
         print("Epoch {}, lr {}".format(epoch, optimizer.param_groups[0]['lr']))
         train_loss, train_words = model.train_epoch(
-            iter=train_iter, loss=loss, optimizer=optimizer,infoToPlot=infoToPlot, viz=viz, win=win, TEXT=TEXT)
+            iter=train_iter, loss=loss, optimizer=optimizer,infoToPlot=infoToPlot, viz=viz, win=win, TEXT=TEXT, args=args)
         valid_loss, valid_words = model.validate(valid_iter, loss, infoToPlot=infoToPlot, viz=viz, win=win)
         schedule.step(valid_loss) 
         print("Train: {}, Valid: {}".format(
@@ -320,7 +340,7 @@ if __name__ == "__main__":
         with open(os.path.join(directoryData,'data.pkl'), 'wb') as f:
             pickle.dump(infoToPlot, f, pickle.HIGHEST_PROTOCOL)
         print('generate sameple sentences...')    
-        outputs=model.generate_predictions(TEXT, saveOutputs=True)
+        outputs=model.generate_predictions(TEXT, test_iter, saveOutputs=True)
 
     #test and save model
     print('run on the test set...')
@@ -329,7 +349,5 @@ if __name__ == "__main__":
     print('generate predictions with the trained model...')
     model.generate_predictions(TEXT)
     print('save model...')
-    model.generationIteratorBuilt=False
-    model.iterator=None
-    torch.save(model.cpu().state_dict(), os.path.join(directoryCkpt,model.__class__.__name__ + ".pth"))
+    model.save_model(args)
     print('done')
