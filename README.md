@@ -18,6 +18,7 @@ if os.name=='nt':
  
 
 * Large vocabulary
+
 Also, as the vocabulary size is large (~100K to 1M words similar to the 1B words benchmark) we implemented an efficient softmax + Cross Entropy based on : https://arxiv.org/abs/1609.04309
 
 
