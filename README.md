@@ -1,5 +1,5 @@
 
-*** REPO IN CONSTRUCTION
+* REPO IN CONSTRUCTION
 
 This repo implements a language model based on the word level. 
 
