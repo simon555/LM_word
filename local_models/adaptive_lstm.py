@@ -17,7 +17,7 @@ from tqdm import tqdm
 import random
 from visualisation import visdom_plot
 import itertools
-import time
+from time import time
 import pickle
 import adaptive
 
@@ -34,14 +34,13 @@ class LstmLm(nn.Module):
         self.args=args
         self.nhid=args.nhid
         self.nlayers=args.nlayers
-        self.dropout_LSTM=args.dropout_LSTM
-        self.dropout_linear=args.dropout_linear
+        self.dropout=args.dropout_LSTM
         self.tieweights=args.tieweights
         self.vsize = len(vocab.itos)
         self.padidx=padidx
         
         #number of batches of training seen
-        self.batch_id=1
+        self.batch_id=0
         
         if args.maxnorm==False:
             maxNorm=None
@@ -53,14 +52,18 @@ class LstmLm(nn.Module):
             input_size=self.nhid,
             hidden_size=self.nhid,
             num_layers=self.nlayers,
-            dropout=self.dropout_LSTM)
-        self.drop = nn.Dropout(self.dropout_linear)
+            dropout=self.dropout)
+        self.drop = nn.Dropout(self.dropout)
         self.proj = nn.Linear(self.nhid, self.vsize)
         self.trainingEpochs=0 #number of epochs already trained
         self.trainingBatches=0
         self.temperature=1
         self.generationIteratorBuilt=False
-        
+        self.decoder=adaptive.AdaptiveLogSoftmaxWithLoss(self.nhid, 
+                                                         self.vsize,
+                                                         [int(self.vsize*0.2),int(self.vsize*0.5),int(self.vsize*0.7), int(self.vsize*0.9)])
+                                                        # [int(self.vsize*0.1), int(self.vsize*0.3), int(self.vsize*0.7)])
+            
         
         
         self.best_ppl=np.inf
@@ -72,39 +75,13 @@ class LstmLm(nn.Module):
         
         if torch.cuda.is_available():
             self.cuda()
-    
-    
-    def vec2idx(self, logits, mode='argmax'):        
-        '''
-        convert the output of forward into a sequence of word indexes
-        input : [bptt, Nbatch, vsize]
-        output : [bptt, Nbatch]
-        '''       
-        distribution = torch.nn.Softmax(dim=-1)(torch.mul(logits,1/self.temperature))
-    
-        
-        if mode=='sample':
-            output=[]        
-            for timeStep in range(distribution.shape[0]):
-                output.append(torch.multinomial(distribution[timeStep,:,:],1).view(-1).cpu().data.tolist())
 
-        elif mode=='argmax':
-            val, output = distribution.max(dim=-1)
-        
-        else:
-            print('mode of sampling not found : ', mode)
-        
-        return(output)
-        
-        
-        
-        
     def forward(self, input, hid):
         emb = self.lut(input)
         hids, hid = self.rnn(emb, hid)
         # Detach hiddens to truncate the computational graph for BPTT.
         # Recall that hid = (h,c).
-        return (self.proj(self.drop(hids)), hid)
+        return (self.drop(hids), hid)
     
     def next_N_words(self, word, hid_, TEXT, length_to_predict):
         output=[]
@@ -120,21 +97,22 @@ class LstmLm(nn.Module):
             
             hids, hid_ = self.rnn(emb, hid_)
             
-            next_logits=self.proj((hids)).view(-1)
-            next_distr=torch.nn.Softmax(dim=0)(torch.mul(next_logits, 1/self.temperature))
-            next_index=torch.multinomial(next_distr,1)
+            #next_logits=self.proj((hids)).view(-1)
+            #next_distr=torch.nn.Softmax(dim=0)(torch.mul(next_logits, 1/self.temperature))
+            #next_index=torch.multinomial(next_distr,1)
+            
+            next_distribution = torch.exp(self.decoder.log_prob(hids[-1,:,:]))
+            next_index=torch.multinomial(next_distribution, 1)
             
             next_word=TEXT.vocab.itos[next_index.cpu().item()]
             output+=[next_word]
             word=next_word
         return(output)
 
-
     def repackage_hidden(self,h):
         """Wraps hidden states in new Variables, to detach them from their history."""
         for v in h:
             v.detach_()
-        return(h)
     
 
     def train_epoch(self, iter, val_iter,  loss, optimizer, viz, win, TEXT, args, infoToPlot=None):
@@ -147,13 +125,15 @@ class LstmLm(nn.Module):
         hid = None
        
         iterable=tqdm(iter)
+        train_mean_time=0
         
-        for batch in iterable:
+        for local_batch_number, batch in enumerate(iterable):
+            start=time()
             self.trainingBatches+=1
             
             if hid is not None:
                 #print(len(hid))
-                hid=self.repackage_hidden(hid)
+                self.repackage_hidden(hid)
                 #hid[0].detach_()
                 #hid[1].detach_()
                 
@@ -169,10 +149,11 @@ class LstmLm(nn.Module):
             out, hid = self(x, hid if hid is not None else None)
             #print('hid', hid[0].shape)
             #print('hid', hid[1].shape)
-            bloss = loss(out.contiguous().view(-1, self.vsize), y.contiguous().view(-1))
             
-            
-            
+            #bloss = loss(out.view(-1, self.vsize), y.contiguous().view(-1))
+                        
+            bloss = self.decoder(out.contiguous().view(-1,self.nhid), y.contiguous().view(-1)).loss
+
             bloss.backward()
             train_loss += bloss.item()
             # bytetensor.sum overflows, so cast to int
@@ -182,40 +163,39 @@ class LstmLm(nn.Module):
 
             optimizer.step()
             
+            end=time()
+            
+            batch_time=end-start
+            
+            train_mean_time += batch_time
+            
             
             iterable.set_description("ppl %.3f" % np.exp(train_loss/nwords) )
-
+            
             
 
             if self.batch_id % self.args.Nplot == 0:
                 if not infoToPlot is None:
                     infoToPlot['trainPerp']+=[np.exp(train_loss/nwords)]
                     infoToPlot['id_batch_train']+=[self.batch_id]
+                    infoToPlot['time_train']+=[train_mean_time/(local_batch_number+1)]
                 
                 sampled_sentences=self.generate_predictions(TEXT)
                 #print(sampled_sentences)
                 infoToPlot['generated']=sampled_sentences
                 #print(infoToPlot['generated'])
-                
-                estimate=self.vec2idx(out)            
-                matching_train = y==estimate
-                matching_train=matching_train.sum().cpu().data.tolist()           
-                infoToPlot['matching_train']+=[matching_train/(y.shape[0] * y.shape[1])]
-                
-                
-                
                 if self.args.vis:
                     win = visdom_plot(viz, win, infoToPlot)
                 
                 self.train()
             
-            if self.batch_id % 100 * self.args.Nplot == 0:
+            if self.batch_id % self.args.NinfoSave == 0:
                 with open(os.path.join(args.directoryData,'data.pkl'), 'wb') as f:
                     pickle.dump(infoToPlot, f, pickle.HIGHEST_PROTOCOL)
             
             if self.batch_id % self.args.Nsave == 0:
                 
-                valid_loss, valid_nwords = self.validate(val_iter, loss, viz, win, infoToPlot, max_number_of_iterations=np.inf)
+                valid_loss, valid_nwords = self.validate(val_iter, loss, viz, win, infoToPlot, max_number_of_iterations=1000)
                 
                 current_ppl=np.exp(valid_loss/valid_nwords)
                 if current_ppl < self.best_ppl:
@@ -235,19 +215,21 @@ class LstmLm(nn.Module):
         self.eval()
 
         valid_loss = 0
-        valid_nwords = 0
+        nwords = 0
 
         hid = None
         
         iterable=tqdm(iter)        
-        
+        mean_time=0
         for counter,batch in enumerate(iterable):
+            start=time()
             if counter>max_number_of_iterations:
                 break
             else:               
                 
                 if hid is not None:
-                    hid=self.repackage_hidden(hid)
+                    hid[0].detach_()
+                    hid[1].detach_()
                             
                 x = batch.text
                 y = batch.target
@@ -257,32 +239,32 @@ class LstmLm(nn.Module):
                     y=y.cuda()
                     
                     
-                     
-            out, hid = self(x, hid if hid is not None else None)
-            valid_loss += loss(out.contiguous().view(-1, self.vsize), y.contiguous().view(-1)).item()
-            valid_nwords += y.ne(self.padidx).int().sum().item()
+                out, hid = self(x, hid if hid is not None else None)
                 
-            iterable.set_description("ppl %.3f" % np.exp(valid_loss/valid_nwords))
                 
-                        
+                valid_loss += self.decoder(out.contiguous().view(-1,self.nhid), y.contiguous().view(-1)).loss.item()
+                
+                
+                nwords += y.ne(self.padidx).int().sum().item()
+                
+                end=time()
+                batch_time=end-start
+                mean_time += batch_time
+                
+                
+                iterable.set_description("ppl %.3f" % np.exp(valid_loss/nwords))
+                
+                
             
         if not infoToPlot is None:
-            infoToPlot['validPerp']+=[np.exp(valid_loss/valid_nwords)]
+            infoToPlot['validPerp']+=[np.exp(valid_loss/nwords)]
             infoToPlot['id_batch_valid']+=[self.batch_id]
-            
-            
-            estimate=self.vec2idx(out)
-            matching_valid = y==estimate
-            matching_valid=matching_valid.sum().cpu().data.tolist()
-            infoToPlot['matching_valid']+=[matching_valid/(y.shape[0] * y.shape[1])]
-            
-            
-            
+            infoToPlot['time_valid']+=[mean_time/(counter+1)]
             if self.args.vis:
                 win = visdom_plot(viz, win, infoToPlot, valid=True)
             
         self.train()
-        return valid_loss, valid_nwords
+        return valid_loss, nwords
 
     def generate_predictions(self, TEXT, outputDirectory=None, epoch=None, saveOutputs=False):
         if outputDirectory==None:
@@ -293,13 +275,13 @@ class LstmLm(nn.Module):
             
         self.eval()
         batch_number=10
-        outputs=[dict({'input_sentence':'','expected_sentence':'','output_sentence':'', 'TF_output':''}) for _ in range(batch_number)]
+        outputs=[dict({'input_sentence':'','expected_sentence':'','output_sentence':''}) for _ in range(batch_number)]
         #prepare the data to generate on
         
         if not self.generationIteratorBuilt:
             if os.name=='nt':
                 data = torchtext.datasets.LanguageModelingDataset(
-                path=os.path.join(os.getcwd(),"data", "splitted", "smallData","train.txt"),
+                path=os.path.join(os.getcwd(),"data", "splitted", "smallData","gen.txt"),
                 text_field=TEXT)
             else:
                 data = torchtext.datasets.LanguageModelingDataset(
@@ -340,57 +322,45 @@ class LstmLm(nn.Module):
             
         #first we run the model on the first 20 words, in order to give context to the hidden state
         output_sentence, hidden = self(input_sentence, None)
-        
-        next_distr=torch.nn.Softmax(dim=-1)(torch.mul(output_sentence, 1/self.temperature))
-
-
+            
         for batch_index in range(batch_number):          
             
             #then we run the model using the  computed hidden states
             #len_sent=len(expected_output_words[batch_index])
             #max_index=min(len_sent, 20)
-            max_index=len(expected_output_words[batch_index])-1
-            #print(max_index)      
-            if max_index <20 :
-                pass
-            else:
-                #print('max index ', max_index)
-                index=20
-                expected_output_words[batch_index] = expected_output_words[batch_index][index:]
-                input_word=expected_output_words[batch_index][0]
-                
-                #we select the correct hidden state for the batch
-                #because next_N_words take a single word as input
-                local_h=hidden[0][:,batch_index:batch_index+1,:].contiguous()
-                local_c=hidden[1][:,batch_index:batch_index+1,:].contiguous()
-                local_hidden=(local_h, local_c)
-                
-                output=self.next_N_words(input_word, local_hidden, TEXT, 80)
-                
-                
-                outputs[batch_index]['input_sentence']=''.join([x+' ' for x in input_words[batch_index]])
-                outputs[batch_index]['expected_sentence']=''.join([x+' ' for x in expected_output_words[batch_index]])
-                outputs[batch_index]['output_sentence']=''.join([x+' ' for x in output])
-                
-                next_index=torch.multinomial(next_distr[:,batch_index,:],1)
-                outputs[batch_index]['TF_output']=''.join([TEXT.vocab.itos[x] + ' '  for x in next_index.view(-1).data.tolist()])
+            max_index=len(expected_output_words[batch_index])
+            #print('max index ', max_index)
+            index=min(max_index-1, 20)
+            
+            input_word=expected_output_words[batch_index][index]
+            
+            #we select the correct hidden state for the batch
+            #because next_N_words take a single word as input
+            local_h=hidden[0][:,batch_index:batch_index+1,:]
+            local_c=hidden[1][:,batch_index:batch_index+1,:]
+            local_hidden=(local_h.contiguous(), local_c.contiguous())
+            
+            output=self.next_N_words(input_word, local_hidden, TEXT, 80)
 
-                
-                if saveOutputs:
-                    with open(os.path.join(self.args.directoryData,self.__class__.__name__ + "_preds.txt"), "a") as f:
-        
-                        f.write('input sentence : \n')
-                        f.write( ''.join([x+' ' for x in input_words[batch_index]]))
-                        f.write('\n \n')
-                        
-                        f.write('expected output sentence : \n')
-                        f.write(''.join([x+' ' for x in expected_output_words[batch_index]]))
-                        f.write('\n \n')
-                        
-                        f.write('sampled output sentence : \n')
-                        f.write(''.join([x+' ' for x in output]))
-                        f.write('\n \n \n ')
-        
+            outputs[batch_index]['input_sentence']=''.join([x+' ' for x in input_words[batch_index]])
+            outputs[batch_index]['expected_sentence']=''.join([x+' ' for x in expected_output_words[batch_index]])
+            outputs[batch_index]['output_sentence']=''.join([x+' ' for x in output])
+            
+            if saveOutputs:
+                with open(os.path.join(self.args.directoryData,self.__class__.__name__ + "_preds.txt"), "a") as f:
+    
+                    f.write('input sentence : \n')
+                    f.write( ''.join([x+' ' for x in input_words[batch_index]]))
+                    f.write('\n \n')
+                    
+                    f.write('expected output sentence : \n')
+                    f.write(''.join([x+' ' for x in expected_output_words[batch_index]]))
+                    f.write('\n \n')
+                    
+                    f.write('sampled output sentence : \n')
+                    f.write(''.join([x+' ' for x in output]))
+                    f.write('\n \n \n ')
+    
  
         return(outputs)
             
@@ -411,57 +381,5 @@ class LstmLm(nn.Module):
         if torch.cuda.is_available():
             self.cuda()
 
-class SampledSoftmax(nn.Module):
-    def __init__(self, ntokens, nsampled, decoding_module):
-        super(SampledSoftmax, self).__init__()
-
-        # Parameters
-        self.ntokens = ntokens
-        self.nsampled = nsampled
-
-        self.sampler = LogUniformSampler(self.ntokens)
-        self.params = decoding_module
-
-    def forward(self, inputs, labels):
-        if self.training:
-            return self.sampled(inputs, labels, remove_accidental_match=True)
-        else:
-            return self.full(inputs, labels)
-
-    def sampled(self, inputs, labels, remove_accidental_match=False):
-        batch_size, d = inputs.size()
-        labels_ndarray = labels.data.cpu().numpy()
-        sample_ids, true_freq, sample_freq = self.sampler.sample(self.nsampled, labels_ndarray)
-
-        # gather true labels and sample ids
-        true_weights = self.params.weight.index_select(0, labels)
-        sample_weights = self.params.weight[sample_ids, :]
-
-        # calculate logits
-        true_logits = torch.sum(torch.mul(inputs, true_weights), dim=1)
-        sample_logits = torch.matmul(inputs, torch.t(sample_weights))
-        # remove true labels from sample set
-        if remove_accidental_match:
-            acc_hits = self.sampler.accidental_match(labels_ndarray, sample_ids)
-            if len(acc_hits) > 0:
-                acc_hits = list(zip(*acc_hits))
-                sample_logits[acc_hits] = -1e37
-
-        # perform correction
-        true_freq = Variable(type(inputs.data)(true_freq))
-        sample_freq = Variable(type(inputs.data)(sample_freq))
-
-        true_logits = true_logits.sub(torch.log(true_freq))
-        sample_logits = sample_logits.sub(torch.log(sample_freq))
-
-        # return logits and new_labels
-        logits = torch.cat((torch.unsqueeze(true_logits, dim=1), sample_logits), dim=1)
-        new_targets = Variable(type(labels.data)(batch_size).zero_())
-        return logits, new_targets
-
-    def full(self, inputs, labels):
-        return self.params(inputs), labels
-    
-    
 
 

@@ -186,7 +186,7 @@ class lazy_BPTTIterator(Iterator):
                 text=self.dataset.text.__next__()
                 
                 data = TEXT.numericalize(
-                    [text], device=self.device, train=self.train)
+                    [text], device=self.device)
                 data = data.view(self.batch_size, -1).t().contiguous()
                 dataset = Dataset(examples=self.dataset.examples, fields=[
                     ('text', TEXT), ('target', TEXT)])

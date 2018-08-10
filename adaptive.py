@@ -8,6 +8,8 @@ from torch.nn.modules import Sequential, ModuleList, Linear
 from torch.nn.modules.module import Module
 from torch.nn.functional import log_softmax
 
+from torch.autograd import Variable
+
 
 _ASMoutput = namedtuple('ASMoutput', ['output', 'loss'])
 
@@ -84,7 +86,7 @@ class AdaptiveLogSoftmaxWithLoss(Module):
         https://en.wikipedia.org/wiki/Zipf%27s_law
     """
 
-    def __init__(self, in_features, n_classes, cutoffs, div_value=4., head_bias=False):
+    def __init__(self, in_features, n_classes, cutoffs, div_value=4., head_bias=False, size_average=False):
         super(AdaptiveLogSoftmaxWithLoss, self).__init__()
 
         cutoffs = list(cutoffs)
@@ -104,6 +106,9 @@ class AdaptiveLogSoftmaxWithLoss(Module):
         self.cutoffs = cutoffs + [n_classes]
         self.div_value = div_value
         self.head_bias = head_bias
+        self.size_average=size_average
+        
+        
 
         self.shortlist_size = self.cutoffs[0]
         self.n_clusters = len(self.cutoffs) - 1
@@ -111,12 +116,20 @@ class AdaptiveLogSoftmaxWithLoss(Module):
 
         self.head = Linear(self.in_features, self.head_size, bias=self.head_bias)
         self.tail = ModuleList()
-
+        
+        
+        self.no_special_mask=torch.ones(self.head_size)
+        self.no_special_mask[1]=0
+        
+        self.no_special_mask = Variable(self.no_special_mask, requires_grad=False).cuda()
+        
+        
         for i in range(self.n_clusters):
 
             hsz = int(self.in_features // (self.div_value ** (i + 1)))
             osz = self.cutoffs[i + 1] - self.cutoffs[i]
-
+            print(self.in_features, hsz)
+            
             projection = Sequential(
                 Linear(self.in_features, hsz, bias=False),
                 Linear(hsz, osz, bias=False)
@@ -180,8 +193,21 @@ class AdaptiveLogSoftmaxWithLoss(Module):
 
         head_output = self.head(input)
         head_logprob = log_softmax(head_output, dim=1)
+        
+        #rescale the head_logprob, in order to get rid of the impact of special tokens 
+        #<pad>        
+        head_logprob = torch.mul(head_logprob, self.no_special_mask)
+        
+
+
+        
         output += head_logprob.gather(1, gather_inds.unsqueeze(1)).squeeze()
-        loss = (-output).mean()
+        
+        if self.size_average:
+            loss = (-output).mean()
+        else:
+            loss = (-output).sum()
+
 
         return _ASMoutput(output, loss)
 
@@ -230,9 +256,15 @@ class AdaptiveLogSoftmaxWithLoss(Module):
             - Input: :math:`(N, in\_features)`
             - Output: :math:`(N)`
         """
+        
+        #need to implement the temperature parameter in the softmax
 
         head_output = self.head(input)
-        output = torch.argmax(head_output, dim=1)
+        #output = torch.argmax(head_output, dim=1)
+        
+        output = torch.multinomial(head_output,1)
+        
+        
         not_in_shortlist = (output >= self.shortlist_size)
         all_in_shortlist = not (not_in_shortlist.any())
 
@@ -241,10 +273,17 @@ class AdaptiveLogSoftmaxWithLoss(Module):
 
         elif not_in_shortlist.all():
             log_prob = self._get_full_log_prob(input, head_output)
-            return torch.argmax(log_prob, dim=1)
+            
+            #output = torch.argmax(log_prob, dim=1)
+            output = torch.multinomial(log_prob,1)
+            
+            return output
 
         else:
             log_prob = self._get_full_log_prob(input[not_in_shortlist],
                                                head_output[not_in_shortlist])
-            output[not_in_shortlist] = torch.argmax(log_prob, dim=1)
+            
+            #output[not_in_shortlist] = torch.argmax(log_prob, dim=1)            
+            output[not_in_shortlist] = torch.multiprocessing(log_prob, 1)
+            
         return output
