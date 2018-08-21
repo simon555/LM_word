@@ -16,10 +16,9 @@ from torch.autograd import Variable
 from tqdm import tqdm
 import random
 from visualisation import visdom_plot
-import itertools
 import time
 import pickle
-import adaptive
+ 
 
 #from local_models.log_uniform.log_uniform import LogUniformSampler
 
@@ -55,11 +54,18 @@ class LstmLm(nn.Module):
             num_layers=self.nlayers,
             dropout=self.dropout_LSTM)
         self.drop = nn.Dropout(self.dropout_linear)
-        self.proj = nn.Linear(self.nhid, self.vsize)
         self.trainingEpochs=0 #number of epochs already trained
         self.trainingBatches=0
         self.temperature=1
         self.generationIteratorBuilt=False
+        
+        if self.args.loss == 'regularCrossEntropy':
+            self.lastLayer = nn.Linear(self.nhid, self.vsize)
+            self.get_logProb = nn.LogSoftmax()
+        elif self.args.loss =='adaptive':
+            self.cutoffs=[int(self.vsize*0.2),int(self.vsize*0.5),int(self.vsize*0.7), int(self.vsize*0.9)]
+            self.lastLayer=nn.AdaptiveLogSoftmaxWithLoss(self.nhid, self.vsize, self.cutoffs)
+
         
         
         
@@ -68,43 +74,119 @@ class LstmLm(nn.Module):
         if self.tieweights:
             # See https://arxiv.org/abs/1608.05859
             # Seems to improve ppl by 13%.
-            self.proj.weight = self.lut.weight
+            if self.args.loss == 'regularCrossEntropy':
+                self.lastLayer.weight = self.lut.weight
+            elif self.args.loss == 'adaptive':
+                print('not implemented tiedweights yet....')
         
         if torch.cuda.is_available():
             self.cuda()
+            
     
     
-    def vec2idx(self, logits, mode='argmax'):        
-        '''
-        convert the output of forward into a sequence of word indexes
-        input : [bptt, Nbatch, vsize]
-        output : [bptt, Nbatch]
-        '''       
-        distribution = torch.nn.Softmax(dim=-1)(torch.mul(logits,1/self.temperature))
+            
     
+    
+    def idx2word(self, indexes, TEXT):
+        """
+        takes as input Tensor of indexes and output an array of correspunding words
         
-        if mode=='sample':
-            output=[]        
-            for timeStep in range(distribution.shape[0]):
-                output.append(torch.multinomial(distribution[timeStep,:,:],1).view(-1).cpu().data.tolist())
+        input : Tensor of shape [ bptt, bsz]
+        outptu : list of word strings of size [bptt, bsz]
+        """
+        bptt, bsz = indexes.shape
+        
+        output = [  [ 0  for i in range(bsz)] for j in range(bptt)]
+        
+        for timeStep in range(bptt):
+            for batch in range(bsz):
+                output[timeStep][batch] = TEXT.vocab.itos[indexes[timeStep, batch].cpu().long().item()]
 
-        elif mode=='argmax':
-            val, output = distribution.max(dim=-1)
-        
-        else:
-            print('mode of sampling not found : ', mode)
+              
         
         return(output)
         
         
+    def from_input_to_before_last_layer(self, input, hid):
+        """
+        Take the input word indexes and process them until the penultimate layer 
+        
+        input : [timeStep, batchSize]
+        output : [timeStep, batchSize, nhid]
+        """
+        
+        emb = self.lut(input)
+        hids, hid = self.rnn(emb, hid)    
+        #did not insert dropout, to be checked...
+        return(hids, hid)
         
         
     def forward(self, input, hid):
-        emb = self.lut(input)
-        hids, hid = self.rnn(emb, hid)
-        # Detach hiddens to truncate the computational graph for BPTT.
-        # Recall that hid = (h,c).
-        return (self.proj(self.drop(hids)), hid)
+       """
+       take as input the word indexes and outputs the log_probabilities of next word
+       
+       intput : [timeStep, batchSize]
+       output : [timeStep, batchSize, vocab_Size]
+       This output format is preferred due to the next loss layer, 
+       instead of calling 2 times .view()
+       """
+       #safe check, in case of non complete batch (<self.args.bsz)
+       local_time_length, local_batch_size = input.shape
+       
+       
+       hids, hid = self.from_input_to_before_last_layer(input, hid)
+       #print('CHECKUP')
+       #print('huds', hids.shape)
+       #print('hid', hid[0].shape)
+       #print('hid', hid[1].shape)
+        
+       # Detach hiddens to truncate the computational graph for BPTT.
+       # Recall that hid = (h,c).
+       if self.args.loss == 'adaptive' :           
+           log_prob=self.lastLayer.log_prob(hids.view(-1, self.nhid))
+           #log_prob =self.lastLayer.log_prob(hids)
+           
+           return(log_prob.view(local_time_length, local_batch_size, self.vsize), hid)
+           
+       elif self.args.loss == 'regularCrossEntropy':
+           logits=self.lastLayer(hids.view(-1,self.nhid))
+           log_prob=self.get_logProb(logits)
+           
+           return (log_prob.view(local_time_length, local_batch_size, self.vsize), hid)
+       
+        
+        
+    def sample_from_log_prob(self, log_prob, mode='argmax'):
+        """
+        sample from the tensor of log_prob
+        
+        input : [bptt, bsz, vocab_size]
+        output : [bptt, bsz]
+        """
+        
+        
+        prob=log_prob.exp()
+        
+        if mode == 'sample':
+            #option 1 : sample
+            bptt, bsz = log_prob.shape
+            output=torch.zeros(bptt, bsz)
+            for time_step in range(bptt):
+                for batch in range(bsz):
+                    output[time_step, batch]=torch.multinomial(prob[time_step,batch,:],1)
+                    
+        elif mode == 'argmax':
+            #option 2 : argmax
+            output=prob.argmax(dim=2)
+            
+        else:
+            print('sampling mode unknown')
+            
+        return(output.long())
+        
+        
+        
+        
     
     def next_N_words(self, word, hid_, TEXT, length_to_predict):
         output=[]
@@ -128,6 +210,8 @@ class LstmLm(nn.Module):
             output+=[next_word]
             word=next_word
         return(output)
+    
+    
 
 
     def repackage_hidden(self,h):
@@ -137,7 +221,11 @@ class LstmLm(nn.Module):
         return(h)
     
 
-    def train_epoch(self, iter, val_iter,  loss, optimizer, viz, win, TEXT, args, infoToPlot=None):
+    def train_epoch(self, iter, val_iter,  gen_iter, loss, optimizer, viz, win, TEXT, args, infoToPlot=None):
+        """
+        Training loop
+        """
+        
         self.train()
         self.trainingBatches=0
 
@@ -161,15 +249,30 @@ class LstmLm(nn.Module):
             x = batch.text
             y = batch.target
             
+            #print('x, ',x.shape)
+            #print('y, ',y.shape)
+            
             if torch.cuda.is_available():
                 x=x.cuda()
                 y=y.cuda()
                 
            
-            out, hid = self(x, hid if hid is not None else None)
+            log_prob, hid = self(x, hid if hid is not None else None)
+            
             #print('hid', hid[0].shape)
             #print('hid', hid[1].shape)
-            bloss = loss(out.contiguous().view(-1, self.vsize), y.contiguous().view(-1))
+            #print('log_prob', log_prob.shape)
+            #print('vocab ', self.vsize)
+            
+            #prediction = log_prob.view(-1, self.vsize)
+            
+            #print('prediction', prediction.shape)            
+            #print('sum ', prediction.sum(dim=1).shape)
+            #print('sum ', prediction.sum(dim=1)[:10])
+            
+            bloss = loss(log_prob.view(-1, self.vsize), y.contiguous().view(-1))
+
+            #bloss = loss(log_prob.contiguous().view(-1, self.vsize), y.contiguous().view(-1))
             
             
             
@@ -192,12 +295,14 @@ class LstmLm(nn.Module):
                     infoToPlot['trainPerp']+=[np.exp(train_loss/nwords)]
                     infoToPlot['id_batch_train']+=[self.batch_id]
                 
-                sampled_sentences=self.generate_predictions(TEXT)
+                sampled_sentences=self.generate_predictions(gen_iter, TEXT)
+                
                 #print(sampled_sentences)
                 infoToPlot['generated']=sampled_sentences
                 #print(infoToPlot['generated'])
                 
-                estimate=self.vec2idx(out)            
+                estimate=self.sample_from_log_prob(log_prob) 
+                                
                 matching_train = y==estimate
                 matching_train=matching_train.sum().cpu().data.tolist()           
                 infoToPlot['matching_train']+=[matching_train/(y.shape[0] * y.shape[1])]
@@ -232,6 +337,10 @@ class LstmLm(nn.Module):
         return train_loss, nwords
 
     def validate(self, iter, loss, viz=None, win=None, infoToPlot=None, max_number_of_iterations=np.inf):
+        """
+        validation loop
+        """
+        
         self.eval()
 
         valid_loss = 0
@@ -257,9 +366,13 @@ class LstmLm(nn.Module):
                     y=y.cuda()
                     
                     
+            
+            log_prob, hid = self(x, hid if hid is not None else None)
+            
+           
+            valid_loss += loss(log_prob.view(-1, self.vsize), y.contiguous().view(-1)).item()
+                    
                      
-            out, hid = self(x, hid if hid is not None else None)
-            valid_loss += loss(out.contiguous().view(-1, self.vsize), y.contiguous().view(-1)).item()
             valid_nwords += y.ne(self.padidx).int().sum().item()
                 
             iterable.set_description("ppl %.3f" % np.exp(valid_loss/valid_nwords))
@@ -271,7 +384,9 @@ class LstmLm(nn.Module):
             infoToPlot['id_batch_valid']+=[self.batch_id]
             
             
-            estimate=self.vec2idx(out)
+            #estimate=self.vec2idx(out)
+            estimate=self.sample_from_log_prob(log_prob) 
+            
             matching_valid = y==estimate
             matching_valid=matching_valid.sum().cpu().data.tolist()
             infoToPlot['matching_valid']+=[matching_valid/(y.shape[0] * y.shape[1])]
@@ -284,7 +399,12 @@ class LstmLm(nn.Module):
         self.train()
         return valid_loss, valid_nwords
 
-    def generate_predictions(self, TEXT, outputDirectory=None, epoch=None, saveOutputs=False):
+    def generate_predictions(self, iterator, TEXT, outputDirectory=None, epoch=None, saveOutputs=False):
+        """
+        in-loop function that generates predictions using trained model        
+        """
+        
+        
         if outputDirectory==None:
             outputDirectory=self.args.directoryData
         if epoch==None:
@@ -292,45 +412,28 @@ class LstmLm(nn.Module):
         
             
         self.eval()
-        batch_number=10
-        outputs=[dict({'input_sentence':'','expected_sentence':'','output_sentence':'', 'TF_output':''}) for _ in range(batch_number)]
-        #prepare the data to generate on
         
-        if not self.generationIteratorBuilt:
-            if os.name=='nt':
-                data = torchtext.datasets.LanguageModelingDataset(
-                path=os.path.join(os.getcwd(),"data", "splitted", "smallData","train.txt"),
-                text_field=TEXT)
-            else:
-                data = torchtext.datasets.LanguageModelingDataset(
-                path=os.path.join('/mnt','raid1','text','big_files','splitted','springer_cui_tokenized','test.txt'),
-                text_field=TEXT)
-            
-            
-            data_iter = torchtext.data.BPTTIterator(data, batch_number, bptt_len=100, train=False)
-            #print()
-            #print("Generating the next 80 words, from the 20 first ones")
-            self.iterator=itertools.cycle(iter(data_iter))
-            self.generationIteratorBuilt=True
-        sample=next(self.iterator)
-        input_sentence=sample.text[:20,:]
+        batch_number=self.args.gen_bsz
+        
+        outputs=[dict({'input_warmup':'','output_warmup':'','input_sentence':'', 'output_sentence':''}) for _ in range(batch_number)]
+        
+        sample=next(iterator)
+        
+        input_warmup_idx=sample.text[:self.args.gen_warmup,:]
+        input_sentence_idx = sample.text[self.args.gen_warmup:,:]
+        
+        
         if torch.cuda.is_available:
-            input_sentence=input_sentence.cuda()
-        expected_sentence=sample.text
+            input_warmup_idx=input_warmup_idx.cuda()
+            input_sentence_idx=input_sentence_idx.cuda()
+            
+        
         
         #we will give the 20 first words of a sentence, and predict the 80 next characters
-        input_words=[[] for _ in range(batch_number)]        
-        for i in range(batch_number):
-                input_words[i]=[TEXT.vocab.itos[x] for x in input_sentence[:,i].data.tolist()]
-                #print(input_words)
+        input_warmup_words=self.idx2word(input_warmup_idx, TEXT)
+        input_sentence_words=self.idx2word(input_sentence_idx, TEXT)
         
-        expected_output_words=[[] for _ in range(batch_number)]        
-        for i in range(batch_number):
-                expected_output_words[i]=[TEXT.vocab.itos[x] for x in expected_sentence[:,i].data.tolist()]
-                #print(output_words)          
-        #print(expected_output_words)
-        
-       
+           
         if saveOutputs:
             with open(os.path.join(self.args.directoryData,self.__class__.__name__ + "_preds.txt"), "a") as f:
                 f.write('*' * 20)
@@ -339,129 +442,78 @@ class LstmLm(nn.Module):
                 f.write('\n')
             
         #first we run the model on the first 20 words, in order to give context to the hidden state
-        output_sentence, hidden = self(input_sentence, None)
+        log_prob, hidden = self(input_warmup_idx, None)
         
-        next_distr=torch.nn.Softmax(dim=-1)(torch.mul(output_sentence, 1/self.temperature))
-
-
-        for batch_index in range(batch_number):          
+        #next_distr=torch.nn.Softmax(dim=-1)(torch.mul(output_sentence.exp(), 1/self.temperature))
+        output_warmup_idx = self.sample_from_log_prob(log_prob)
+        
+        #now we run the model in 'free wheel' using the generated predictions as input
+        number_of_predictions = self.args.gen_bptt - self.args.gen_warmup
+        
+        output_sentence_idx=torch.ones(number_of_predictions, self.args.gen_bsz)
+        
+        
+        start_word=input_sentence_idx[0,:].view(-1, self.args.gen_bsz)
+        
+        for timeStep in range(number_of_predictions):
+            local_log_prob, hidden= self(start_word, hidden)
+            start_word = self.sample_from_log_prob(local_log_prob)
             
-            #then we run the model using the  computed hidden states
-            #len_sent=len(expected_output_words[batch_index])
-            #max_index=min(len_sent, 20)
-            max_index=len(expected_output_words[batch_index])-1
-            #print(max_index)      
-            if max_index <20 :
-                pass
-            else:
-                #print('max index ', max_index)
-                index=20
-                expected_output_words[batch_index] = expected_output_words[batch_index][index:]
-                input_word=expected_output_words[batch_index][0]
-                
-                #we select the correct hidden state for the batch
-                #because next_N_words take a single word as input
-                local_h=hidden[0][:,batch_index:batch_index+1,:].contiguous()
-                local_c=hidden[1][:,batch_index:batch_index+1,:].contiguous()
-                local_hidden=(local_h, local_c)
-                
-                output=self.next_N_words(input_word, local_hidden, TEXT, 80)
-                
-                
-                outputs[batch_index]['input_sentence']=''.join([x+' ' for x in input_words[batch_index]])
-                outputs[batch_index]['expected_sentence']=''.join([x+' ' for x in expected_output_words[batch_index]])
-                outputs[batch_index]['output_sentence']=''.join([x+' ' for x in output])
-                
-                next_index=torch.multinomial(next_distr[:,batch_index,:],1)
-                outputs[batch_index]['TF_output']=''.join([TEXT.vocab.itos[x] + ' '  for x in next_index.view(-1).data.tolist()])
-
-                
-                if saveOutputs:
-                    with open(os.path.join(self.args.directoryData,self.__class__.__name__ + "_preds.txt"), "a") as f:
+            local_prediction=start_word.view(self.args.gen_bsz)
+            output_sentence_idx[timeStep, :] = local_prediction
+            
+        #convert to words
+        output_warmup_words=self.idx2word(output_warmup_idx, TEXT)
+        output_sentence_words=self.idx2word(output_sentence_idx, TEXT)
+            
+    
+        #print(output_warmup_words)
+        #print(output_sentence_words)
+            
         
-                        f.write('input sentence : \n')
-                        f.write( ''.join([x+' ' for x in input_words[batch_index]]))
-                        f.write('\n \n')
-                        
-                        f.write('expected output sentence : \n')
-                        f.write(''.join([x+' ' for x in expected_output_words[batch_index]]))
-                        f.write('\n \n')
-                        
-                        f.write('sampled output sentence : \n')
-                        f.write(''.join([x+' ' for x in output]))
-                        f.write('\n \n \n ')
+        for batch in range(self.args.gen_bsz):
+            for timeStep in range(self.args.gen_warmup):
+                outputs[batch]['input_warmup']+=input_warmup_words[timeStep][batch] + ' ' 
+                outputs[batch]['output_warmup']+=output_warmup_words[timeStep][batch] + ' ' 
+            for timeStep in range(number_of_predictions):  
+                outputs[batch]['input_sentence']+=input_sentence_words[timeStep][batch] + ' ' 
+                outputs[batch]['output_sentence']+=output_sentence_words[timeStep][batch] + ' ' 
+
+           
+        if saveOutputs:
+            with open(os.path.join(self.args.directoryData,self.__class__.__name__ + "_preds.txt"), "a") as f:
+    
+                f.write('input warmup : \n')
+                f.write( outputs[0]['input_warmup'])
+                f.write('\n \n')
+                
+                f.write('output warmup : \n')
+                f.write( outputs[0]['output_warmup'])
+                f.write('\n \n')
+                
+                f.write('input sentence : \n')
+                f.write( outputs[0]['input_sentence'])
+                f.write('\n \n')
+                
+                f.write('output sentence : \n')
+                f.write( outputs[0]['output_sentence'])
+                f.write('\n \n')
         
  
         return(outputs)
             
+        
+        
                 
     def save_model(self, args, mode='train'):
-        copy_of_gen_iterator=self.iterator
-        
-        self.generationIteratorBuilt=False        
-        self.iterator=None
+        """
+        Save the current model, working on a CPU
+        """
+               
         
         torch.save(self.cpu().state_dict(), os.path.join(args.directoryCkpt,self.args.model +'_Best{}_'.format(mode)+ ".pth"))
-        
 
-
-        self.iterator=copy_of_gen_iterator
-        self.generationIteratorBuilt=True
         
         if torch.cuda.is_available():
             self.cuda()
-
-class SampledSoftmax(nn.Module):
-    def __init__(self, ntokens, nsampled, decoding_module):
-        super(SampledSoftmax, self).__init__()
-
-        # Parameters
-        self.ntokens = ntokens
-        self.nsampled = nsampled
-
-        self.sampler = LogUniformSampler(self.ntokens)
-        self.params = decoding_module
-
-    def forward(self, inputs, labels):
-        if self.training:
-            return self.sampled(inputs, labels, remove_accidental_match=True)
-        else:
-            return self.full(inputs, labels)
-
-    def sampled(self, inputs, labels, remove_accidental_match=False):
-        batch_size, d = inputs.size()
-        labels_ndarray = labels.data.cpu().numpy()
-        sample_ids, true_freq, sample_freq = self.sampler.sample(self.nsampled, labels_ndarray)
-
-        # gather true labels and sample ids
-        true_weights = self.params.weight.index_select(0, labels)
-        sample_weights = self.params.weight[sample_ids, :]
-
-        # calculate logits
-        true_logits = torch.sum(torch.mul(inputs, true_weights), dim=1)
-        sample_logits = torch.matmul(inputs, torch.t(sample_weights))
-        # remove true labels from sample set
-        if remove_accidental_match:
-            acc_hits = self.sampler.accidental_match(labels_ndarray, sample_ids)
-            if len(acc_hits) > 0:
-                acc_hits = list(zip(*acc_hits))
-                sample_logits[acc_hits] = -1e37
-
-        # perform correction
-        true_freq = Variable(type(inputs.data)(true_freq))
-        sample_freq = Variable(type(inputs.data)(sample_freq))
-
-        true_logits = true_logits.sub(torch.log(true_freq))
-        sample_logits = sample_logits.sub(torch.log(sample_freq))
-
-        # return logits and new_labels
-        logits = torch.cat((torch.unsqueeze(true_logits, dim=1), sample_logits), dim=1)
-        new_targets = Variable(type(labels.data)(batch_size).zero_())
-        return logits, new_targets
-
-    def full(self, inputs, labels):
-        return self.params(inputs), labels
-    
-    
-
 

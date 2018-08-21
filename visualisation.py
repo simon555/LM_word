@@ -20,10 +20,10 @@ def setupViz(args, descriptor):
     viz = Visdom(server=args.serverVisdom,port=args.portVisdom,env='{}_{}_Exp{}/'.format(args.model,args.dataset,args.Nexperience))
     win={'trainPerp':None,
          'validPerp':None,
+         'input_warmup':None,
+         'output_warmup':None,
          'input_sentence':None,
-         'expected_sentence':None,
          'output_sentence':None,
-         'TF_output':None,
          'time_train':None,
          'time_valid':None,
          'matching_train':None,
@@ -225,46 +225,43 @@ def plotMatching(infoToPlot , viz, win, mode='train'):
 def plotSampledSentences(dataDict, viz, win):  
    
 
-    inputText=dataDict[0]['input_sentence']    
-    localWin =viz.text(inputText,
+    input_warmup=dataDict[0]['input_warmup']    
+    localWin =viz.text(input_warmup,
+        opts=dict(
+            showlegend=True,
+            title='input warmup',
+            ) ,win=win['input_warmup']
+        )        
+    win['input_warmup']=localWin
+    
+    
+    output_warmup=dataDict[0]['output_warmup']    
+    localWin =viz.text(output_warmup,
+        opts=dict(
+            showlegend=True,
+            title='output warmup',
+            ) ,win=win['output_warmup']
+        )        
+    win['output_warmup']=localWin
+    
+    input_sentence=dataDict[0]['input_sentence']    
+    localWin =viz.text(input_sentence,
         opts=dict(
             showlegend=True,
             title='input sentence',
             ) ,win=win['input_sentence']
-        )
-        
+        )        
     win['input_sentence']=localWin
     
-    expectedText=dataDict[0]['expected_sentence']    
-    localWin =viz.text(expectedText,
-        opts=dict(
-            showlegend=True,
-            title='expected sentence',
-            ) ,win=win['expected_sentence']
-        )
-        
-    win['expected_sentence']=localWin
     
-    ouputText=dataDict[0]['output_sentence']    
-    localWin =viz.text(ouputText,
+    output_sentence=dataDict[0]['output_sentence']    
+    localWin =viz.text(output_sentence,
         opts=dict(
             showlegend=True,
             title='output sentence',
             ) ,win=win['output_sentence']
-        )
-        
+        )        
     win['output_sentence']=localWin
-    
-    
-    ouputText=dataDict[0]['TF_output']    
-    localWin =viz.text(ouputText,
-        opts=dict(
-            showlegend=True,
-            title='teacher forcing output sentence',
-            ) ,win=win['TF_output']
-        )
-        
-    win['TF_output']=localWin
     
     
     return(win)

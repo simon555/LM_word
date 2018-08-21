@@ -47,19 +47,19 @@ def get_args():
     else:
         parser.add_argument("--devid", type=int, default=6)
 
-    parser.add_argument("--vocab_size", type=int, default=100, help='size of the vocab, -1 means full size')
+    parser.add_argument("--vocab_size", type=int, default=-1, help='size of the vocab, -1 means full size')
     
     parser.add_argument("--grainLevel", type=str, default='word')
 
 
 
     parser.add_argument("--model", choices=["adaptive_lstm", "lstm"], default="lstm")
-    parser.add_argument("--loss", choices=["regular_CrossEntropy", "lstm"], default="regular_CrossEntropy")
+    parser.add_argument("--loss", choices=["regularCrossEntropy", "adaptive"], default="adaptive")
 
     
     
-    parser.add_argument("--nhid", type=int, default=128)
-    parser.add_argument("--nlayers", type=int, default=4)
+    parser.add_argument("--nhid", type=int, default=256)
+    parser.add_argument("--nlayers", type=int, default=1)
 
     parser.add_argument("--tieweights", default=True)
     parser.add_argument("--maxnorm", type=float, default=False)
@@ -75,8 +75,13 @@ def get_args():
     parser.add_argument("--wd", type=float, default=1e-6)
 
     parser.add_argument("--bsz", type=int, default=64)
-    parser.add_argument("--bptt", type=int, default=10)
+    parser.add_argument("--bptt", type=int, default=20)
     parser.add_argument("--clip", type=float, default=5)
+    
+    #generator parameters
+    parser.add_argument("--gen_bsz", type=int, default=5)
+    parser.add_argument("--gen_bptt", type=int, default=100)
+    parser.add_argument("--gen_warmup", type=int, default=20)
 
     # Adam parameters
     parser.add_argument("--b1", type=float, default=0.9)

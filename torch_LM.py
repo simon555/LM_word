@@ -38,13 +38,15 @@ import random
 import sys
 import math
 from local_models import lstm, adaptive_lstm
-from losses import regular_CrossEntropy
+from losses import regularCrossEntropy
 import lazyContiguousDataset
 import dill as pickle
 from visualisation import visdom_plot
 from shutil import copyfile
 import infoToTrack
 import visualisation
+import itertools
+
 
 random.seed(1111)
 torch.manual_seed(1111)
@@ -102,13 +104,31 @@ else:
 if args.lazyLoading is False:
     print('you should use lazy loading if you see that your dataset does not fit in memory')
     train, valid, test = torchtext.datasets.LanguageModelingDataset.splits(
-path=pathToData, train="train.txt", validation="valid.txt", test="valid.txt", text_field=TEXT)
+path=pathToData, train="train.txt", validation="valid.txt", test="test.txt", text_field=TEXT)
 
 else:
     print('using lazy loading')
     train, valid, test = lazyContiguousDataset.LanguageModelingDataset.splits(
-            path=pathToData, train="train.txt", validation="valid.txt", test="valid.txt", args=args, text_field=TEXT)
+            path=pathToData, train="train.txt", validation="valid.txt", test="test.txt", args=args, text_field=TEXT)
    
+
+
+
+#we then create a different generator to generate ramdom sentences 
+#that continue sentences from the test dataset
+# it has different bsz and bptt parameters
+if os.name=='nt':
+    data = torchtext.datasets.LanguageModelingDataset(
+    path=os.path.join(os.getcwd(),"data", "splitted", "smallData","test.txt"),
+    text_field=TEXT)
+else:
+    data = torchtext.datasets.LanguageModelingDataset(
+    path=os.path.join('/mnt','raid1','text','big_files','splitted','springer_cui_tokenized','test.txt'),
+    text_field=TEXT)
+    
+data_iter = torchtext.data.BPTTIterator(data, batch_size=args.gen_bsz, bptt_len=args.gen_bptt, train=False)
+gen_iterator=itertools.cycle(iter(data_iter))
+
 
 #check if the vocab of the text field is built or no 
 #depending on loading a premade vocab or building a new one
@@ -271,13 +291,15 @@ if __name__ == "__main__":
 # =============================================================================
 #    Select the loss to use
 # =============================================================================
-    if args.loss=='regular_CrossEntropy':
-        loss=regular_CrossEntropy.Loss(vsize=model.vsize,padidx=padidx, size_average=False)
-    elif args.loss=='adaptive_softmax':
-        #TO IMPLEMENT !!!!
-        loss=adaptive_softmax
-    else:
-        print('loss not implemented : ', args.loss)
+    loss=regularCrossEntropy.Loss(vsize=model.vsize,padidx=padidx, unkidx=unkidx)
+
+#    if args.loss=='regularCrossEntropy':
+#        loss=regularCrossEntropy.Loss(vsize=model.vsize,padidx=padidx, unkidx=unkidx, size_average=False)
+#    elif args.loss=='adaptive':
+#        #TO IMPLEMENT !!!!
+#        loss=adaptiveSoftMax()
+#    else:
+#        print('loss not implemented : ', args.loss)
     
         
     
@@ -317,7 +339,7 @@ if __name__ == "__main__":
     for epoch in range(args.epochs):
         print("Epoch {}, lr {}".format(epoch, optimizer.param_groups[0]['lr']))
         train_loss, train_words = model.train_epoch(
-            iter=train_iter, val_iter = valid_iter, loss=loss, optimizer=optimizer,infoToPlot=infoToPlot, viz=viz, win=win, TEXT=TEXT, args=args)
+            iter=train_iter, val_iter = valid_iter, gen_iter=gen_iterator, loss=loss, optimizer=optimizer,infoToPlot=infoToPlot, viz=viz, win=win, TEXT=TEXT, args=args)
         
         valid_loss, valid_words = model.validate(valid_iter, loss, infoToPlot=infoToPlot, viz=viz, win=win)
         
@@ -329,14 +351,14 @@ if __name__ == "__main__":
         print("Train: {}, Valid: {}".format(
             math.exp(train_loss / train_words), math.exp(valid_loss / valid_words)))
         
-        #save info of th e epoch
+        #save info of the epoch
         print('save info...')
         with open(os.path.join(directoryData,'data.pkl'), 'wb') as f:
             pickle.dump(infoToPlot, f, pickle.HIGHEST_PROTOCOL)
         
         #generate samples to display via VIZDOM
         print('generate sameple sentences...')    
-        outputs=model.generate_predictions(TEXT, test_iter, saveOutputs= True)
+        outputs=model.generate_predictions(gen_iterator, TEXT, saveOutputs= True)
         infoToPlot['generated']=outputs
         win = visdom_plot(viz, win, infoToPlot, valid=True)
 

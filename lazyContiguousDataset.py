@@ -31,12 +31,13 @@ class LanguageModelingDataset(data.Dataset):
         """
         self.TEXT=text_field
         self.args = args
+        self.bsz=args.bsz+1
         fields = [('text', text_field)]
         
         self.numberOfTokens=0
         
         with io.open(path, encoding=encoding) as f:
-            print('read through the dataset...')
+            print('read through the dataset to get the total number of tokens...')
             for line in tqdm(f):
                 self.numberOfTokens += len(text_field.preprocess(line))
                 if newline_eos:
@@ -44,13 +45,13 @@ class LanguageModelingDataset(data.Dataset):
         
         print('found {} tokens in the dataset'.format(self.numberOfTokens))
         
-        pads_to_add = self.numberOfTokens % args.bsz
+        pads_to_add = self.numberOfTokens % self.bsz
         
         virtual_size = self.numberOfTokens + pads_to_add
         
-        number_of_tokens_per_batch = int(virtual_size / args.bsz)
+        number_of_tokens_per_batch = int(virtual_size / self.bsz)
         
-        start_generator_at_token=[ i * number_of_tokens_per_batch for i in range(args.bsz)]
+        start_generator_at_token=[ i * number_of_tokens_per_batch for i in range(self.bsz)]
         
         self.list_of_generators=[ LazyGen(path, newline_eos=newline_eos, bptt=args.bptt,text_field=text_field, encoding=encoding, start_at_token=index).gen() for index in start_generator_at_token ]
         
@@ -77,7 +78,7 @@ class LanguageModelingDataset(data.Dataset):
     
     def build_vocab(self, **kwargs):
         counter = Counter()        
-        for i in tqdm(range(math.ceil(self.numberOfTokens / self.args.bsz/self.args.bptt))):
+        for i in tqdm(range(math.ceil(self.numberOfTokens / self.bsz/self.args.bptt))):
             x=self.text.__next__()
             if not self.TEXT.sequential:
                 x = [x]
@@ -167,14 +168,14 @@ class lazy_BPTTIterator(Iterator):
 
     def __init__(self, dataset, batch_size, bptt_len, **kwargs):
         self.bptt_len = bptt_len
-        self.bsz=batch_size
+        self.bsz=batch_size + 1 #to take account of the offset due to the LM
         super(lazy_BPTTIterator, self).__init__(dataset, batch_size, **kwargs)
 
     
     def __len__(self):
         if self.batch_size_fn is not None:
             raise NotImplementedError
-        return math.ceil(self.dataset.numberOfTokens / self.batch_size/self.bptt_len)
+        return math.ceil(self.dataset.numberOfTokens / self.bsz/self.bptt_len)
     
     
     def __iter__(self):
@@ -187,11 +188,11 @@ class lazy_BPTTIterator(Iterator):
                 
                 data = TEXT.numericalize(
                     [text], device=self.device)
-                data = data.view(self.batch_size, -1).t().contiguous()
+                data = data.view(self.bsz, -1).t().contiguous()
                 dataset = Dataset(examples=self.dataset.examples, fields=[
                     ('text', TEXT), ('target', TEXT)])
                 yield Batch.fromvars(
-                    dataset, self.batch_size, train=self.train,
+                    dataset, self.bsz, train=self.train,
                     text=data[:,:-1],
                     target=data[:,1:])
             if not self.repeat:
