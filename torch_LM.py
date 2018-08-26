@@ -46,7 +46,7 @@ from shutil import copyfile
 import infoToTrack
 import visualisation
 import itertools
-
+from infoToTrack import updateDataStorage
 
 random.seed(1111)
 torch.manual_seed(1111)
@@ -259,7 +259,8 @@ with open(os.path.join(directoryScripts, 'descriptor.txt'), 'w') as outstream:
 # Define the info to track along the experiment
 # =============================================================================
 infoToPlot=infoToTrack.getInfo()
-
+with open(os.path.join(directoryData,'data.pkl'), 'wb') as f:
+    pickle.dump(infoToPlot, f, pickle.HIGHEST_PROTOCOL)
 # =============================================================================
 # Define the Vizdom visualizer
 # =============================================================================
@@ -353,14 +354,13 @@ if __name__ == "__main__":
         
         #save info of the epoch
         print('save info...')
-        with open(os.path.join(directoryData,'data.pkl'), 'wb') as f:
-            pickle.dump(infoToPlot, f, pickle.HIGHEST_PROTOCOL)
+        updateDataStorage(infoToPlot, directoryData)
         
         #generate samples to display via VIZDOM
         print('generate sameple sentences...')    
         outputs=model.generate_predictions(gen_iterator, TEXT, saveOutputs= True)
         infoToPlot['generated']=outputs
-        win = visdom_plot(viz, win, infoToPlot, valid=True)
+        win = visdom_plot(viz, win, directoryData ,valid=True)
 
     #test and save model
     print('run on the test set...')

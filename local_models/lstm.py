@@ -18,12 +18,15 @@ import random
 from visualisation import visdom_plot
 import time
 import pickle
- 
+from infoToTrack import updateDataStorage
 
 #from local_models.log_uniform.log_uniform import LogUniformSampler
 
 random.seed(1111)
 torch.manual_seed(1111)
+
+
+    
 
 
 class LstmLm(nn.Module):
@@ -307,16 +310,16 @@ class LstmLm(nn.Module):
                 matching_train=matching_train.sum().cpu().data.tolist()           
                 infoToPlot['matching_train']+=[matching_train/(y.shape[0] * y.shape[1])]
                 
+                updateDataStorage(infoToPlot, args.directoryData)                
+
                 
                 
                 if self.args.vis:
-                    win = visdom_plot(viz, win, infoToPlot)
+                    win = visdom_plot(viz, win, self.args.directoryData)
                 
                 self.train()
             
-            if self.batch_id % 100 * self.args.Nplot == 0:
-                with open(os.path.join(args.directoryData,'data.pkl'), 'wb') as f:
-                    pickle.dump(infoToPlot, f, pickle.HIGHEST_PROTOCOL)
+                           
             
             if self.batch_id % self.args.Nsave == 0:
                 
@@ -326,7 +329,7 @@ class LstmLm(nn.Module):
                 if current_ppl < self.best_ppl:
                     print('old best ppl : {} . New best ppl : {}'.format(self.best_ppl, current_ppl))
                     print('save model...')
-                    self.save_model(args, mode='valid')
+                    self.save_model(args, bestPPL=current_ppl, mode='valid')
                     self.best_ppl=current_ppl
                     
                 
@@ -394,7 +397,8 @@ class LstmLm(nn.Module):
             
             
             if self.args.vis:
-                win = visdom_plot(viz, win, infoToPlot, valid=True)
+                updateDataStorage(infoToPlot, self.args.directoryData)
+                win = visdom_plot(viz, win, self.args.directoryData, valid=True)
             
         self.train()
         return valid_loss, valid_nwords
@@ -505,13 +509,13 @@ class LstmLm(nn.Module):
         
         
                 
-    def save_model(self, args, mode='train'):
+    def save_model(self, args, bestPPL, mode='train'):
         """
         Save the current model, working on a CPU
         """
                
         
-        torch.save(self.cpu().state_dict(), os.path.join(args.directoryCkpt,self.args.model +'_Best{}_'.format(mode)+ ".pth"))
+        torch.save(self.cpu().state_dict(), os.path.join(args.directoryCkpt,self.args.model +'_Best{}_'.format(mode)+ "_ppl_" + '%.3f'%(bestPPL) +".pth"))
 
         
         if torch.cuda.is_available():

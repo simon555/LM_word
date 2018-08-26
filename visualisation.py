@@ -9,8 +9,8 @@ matplotlib.rcParams.update({'font.size': 8})
 
 from torchvision.utils import make_grid
 from visdom import Visdom
-
-
+import pickle
+import os
 def setupViz(args, descriptor):
     from visdom import Visdom
 
@@ -265,11 +265,15 @@ def plotSampledSentences(dataDict, viz, win):
     
     
     return(win)
+    
 
     
     
+def visdom_plot(viz, win, directory, valid=False):    
+
     
-def visdom_plot(viz, win, infoToPlot, valid=False):    
+    infoToPlot = pickle.load(open(os.path.join(directory,'data.pkl'), 'rb'))
+    
 
     if valid==False:
         try:
