@@ -37,7 +37,7 @@ import time
 import random
 import sys
 import math
-from local_models import lstm, adaptive_lstm
+from local_models import lstm
 from losses import regularCrossEntropy
 import lazyContiguousDataset
 import dill as pickle
@@ -307,7 +307,7 @@ if __name__ == "__main__":
     
     if torch.cuda.is_available():
         print('with cuda!')
-        loss=loss.cuda()
+        loss.cuda()
          #criterion=criterion.cuda()
 
 
