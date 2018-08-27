@@ -83,7 +83,7 @@ class LstmLm(nn.Module):
                 print('not implemented tiedweights yet....')
         
         if torch.cuda.is_available():
-            self.cuda()
+            self.cuda(self.args.devid)
             
     
     
@@ -199,7 +199,7 @@ class LstmLm(nn.Module):
             input_tensor=Variable(torch.LongTensor([[wordIndex]]))
             
             if torch.cuda.is_available():
-                input_tensor=input_tensor.cuda()
+                input_tensor=input_tensor.cuda(self.args.devid)
             
             emb = self.lut(input_tensor)
             
@@ -256,8 +256,8 @@ class LstmLm(nn.Module):
             #print('y, ',y.shape)
             
             if torch.cuda.is_available():
-                x=x.cuda()
-                y=y.cuda()
+                x=x.cuda(self.args.devid)
+                y=y.cuda(self.args.devid)
                 
            
             log_prob, hid = self(x, hid if hid is not None else None)
@@ -365,8 +365,8 @@ class LstmLm(nn.Module):
                 y = batch.target
                 
                 if torch.cuda.is_available():
-                    x=x.cuda()
-                    y=y.cuda()
+                    x=x.cuda(self.args.devid)
+                    y=y.cuda(self.args.devid)
                     
                     
             
@@ -428,8 +428,8 @@ class LstmLm(nn.Module):
         
         
         if torch.cuda.is_available:
-            input_warmup_idx=input_warmup_idx.cuda()
-            input_sentence_idx=input_sentence_idx.cuda()
+            input_warmup_idx=input_warmup_idx.cuda(self.args.devid)
+            input_sentence_idx=input_sentence_idx.cuda(self.args.devid)
             
         
         
@@ -519,5 +519,5 @@ class LstmLm(nn.Module):
 
         
         if torch.cuda.is_available():
-            self.cuda()
+            self.cuda(self.args.devid)
 

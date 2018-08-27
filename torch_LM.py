@@ -307,7 +307,7 @@ if __name__ == "__main__":
     
     if torch.cuda.is_available():
         print('with cuda!')
-        loss.cuda()
+        loss.cuda(args.devid)
          #criterion=criterion.cuda()
 
 
