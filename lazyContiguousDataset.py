@@ -61,7 +61,7 @@ class LanguageModelingDataset(data.Dataset):
         #make the batch text generator       
         self.text=self.text_gen()
         
-        
+        print('end gen')
         #toy example used only to initiate the class with the attributes of the text.Dataset class
         self.examples = [data.Example.fromlist([self.text.__next__()], fields)]            
                  
