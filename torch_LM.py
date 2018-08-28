@@ -112,11 +112,12 @@ else:
             path=pathToData, train="train.txt", validation="valid.txt", test="test.txt", args=args, text_field=TEXT)
    
 
-
+print('done')
 
 #we then create a different generator to generate ramdom sentences 
 #that continue sentences from the test dataset
 # it has different bsz and bptt parameters
+print('building a dataset for the generation time....')
 if os.name=='nt':
     data = torchtext.datasets.LanguageModelingDataset(
     path=os.path.join(os.getcwd(),"data", "splitted", "smallData","test.txt"),
@@ -125,7 +126,8 @@ else:
     data = torchtext.datasets.LanguageModelingDataset(
     path=os.path.join('/mnt','raid1','text','big_files','splitted','springer_cui_tokenized','test.txt'),
     text_field=TEXT)
-    
+   
+print('building iterator for generation time')
 data_iter = torchtext.data.BPTTIterator(data, batch_size=args.gen_bsz, bptt_len=args.gen_bptt, train=False)
 gen_iterator=itertools.cycle(iter(data_iter))
 

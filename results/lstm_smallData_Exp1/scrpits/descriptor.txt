@@ -1,0 +1,45 @@
+experience started on : 27/08/2018 at 12:09:11  
+directoryData  C:\Users\simon\Desktop\HMS\projects\LM_word\results\lstm_smallData_Exp1\data 
+       Nplot           300 
+         lrd          0.25 
+       Nsave           300 
+          lr          0.01 
+  portVisdom          8097 
+        bptt            20 
+        nhid           256 
+dropout_LSTM           0.4 
+       model          lstm 
+  grainLevel          word 
+     maxnorm             0 
+         vis             1 
+  gen_warmup            20 
+     nlayers             1 
+         eps         1e-08 
+ lazyLoading             1 
+ Nexperience             1 
+         mom          0.99 
+          dm             0 
+dropout_linear           0.3 
+        cuda             1 
+     dataset     smallData 
+          b1           0.9 
+    fullSize         13716 
+          wd         1e-06 
+directoryOut  C:\Users\simon\Desktop\HMS\projects\LM_word\results\lstm_smallData_Exp1 
+serverVisdom  http://localhost 
+  vocab_size            -1 
+       nonag             0 
+       optim          Adam 
+    gen_bptt           100 
+        loss      adaptive 
+directoryCkpt  C:\Users\simon\Desktop\HMS\projects\LM_word\results\lstm_smallData_Exp1\checkpoint 
+scheduleLearningRate             1 
+          b2         0.999 
+         bsz            64 
+     gen_bsz             5 
+      epochs        100000 
+  tieweights             1 
+       devid             0 
+        clip             5 
+    dataPath  C://Users//simon//Desktop//HMS//projects//LM_word//data//splitted//smallData//  
+directoryScripts  C:\Users\simon\Desktop\HMS\projects\LM_word\results\lstm_smallData_Exp1\scrpits 

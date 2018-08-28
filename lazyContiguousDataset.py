@@ -53,8 +53,9 @@ class LanguageModelingDataset(data.Dataset):
         
         start_generator_at_token=[ i * number_of_tokens_per_batch for i in range(self.bsz)]
         
+        print('build the list of generators to read the data lazyly...', end='')
         self.list_of_generators=[ LazyGen(path, newline_eos=newline_eos, bptt=args.bptt,text_field=text_field, encoding=encoding, start_at_token=index).gen() for index in start_generator_at_token ]
-        
+        print('done')
         
         
         #make the batch text generator       
