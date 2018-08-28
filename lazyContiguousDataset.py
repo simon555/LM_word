@@ -62,6 +62,7 @@ class LanguageModelingDataset(data.Dataset):
         self.text=self.text_gen()
         
         print('end gen')
+        print(self.text.__next__())
         #toy example used only to initiate the class with the attributes of the text.Dataset class
         self.examples = [data.Example.fromlist([self.text.__next__()], fields)]            
                  
