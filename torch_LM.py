@@ -16,12 +16,12 @@ args = get_args()
 import os
 
 #check if you work  on a local windows machine to debug, or on a Linux server
-#if os.name != 'nt':
-#    #work on linux server
-#    command_to_run='CUDA_VISIBLE_DEVICE={}'.format(args.devid)
-#    check=os.system(command_to_run)
-#    print('command run : ', command_to_run, '...', check==0)
-#    
+if os.name != 'nt':
+    #work on linux server
+    command_to_run='CUDA_VISIBLE_DEVICE={}'.format(args.devid)
+    check=os.system(command_to_run)
+    print('command run : ', command_to_run, '...', check==0)
+    
 
 
 
@@ -309,7 +309,7 @@ if __name__ == "__main__":
     
     if torch.cuda.is_available():
         print('with cuda!')
-        loss.cuda(args.devid)
+        loss.cuda()
          #criterion=criterion.cuda()
 
 
