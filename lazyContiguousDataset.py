@@ -62,10 +62,11 @@ class LanguageModelingDataset(data.Dataset):
         self.text=self.text_gen()
         
         print('end gen')
-        print(self.text.__next__())
+        
+        toyTextForExample=['foo' for _ in range(self.args.bptt * self.bsz)]
         print('built')
         #toy example used only to initiate the class with the attributes of the text.Dataset class
-        self.examples = [data.Example.fromlist([self.text.__next__()], fields)]            
+        self.examples = [data.Example.fromlist([toyTextForExample], fields)]            
                  
         print('calling super')
         super(LanguageModelingDataset, self).__init__(
