@@ -41,6 +41,7 @@ class LstmLm(nn.Module):
         self.tieweights=args.tieweights
         self.vsize = len(vocab.itos)
         self.padidx=padidx
+        self.firstSavingModel=True
         
         #number of batches of training seen
         self.batch_id=1
@@ -513,10 +514,20 @@ class LstmLm(nn.Module):
         """
         Save the current model, working on a CPU
         """
-               
         
-        torch.save(self.cpu().state_dict(), os.path.join(args.directoryCkpt,self.args.model +'_Best{}_'.format(mode)+ "_ppl_" + '%.3f'%(bestPPL) +".pth"))
+        modelAbsoluteName=os.path.join(args.directoryCkpt,self.args.model +'_Best{}_'.format(mode)+ "_ppl_" + '%.3f'%(bestPPL) + 'vocabSize_{}'.format(self.vsize) +".pth")
+    
+        torch.save(self.cpu().state_dict(), modelAbsoluteName)
+        
+        oldModel=modelAbsoluteName
 
+        
+        if not self.firstSavingModel:
+            os.remove(oldModel)
+        else:
+            self.firstSavingModel = False
+            
+        
         
         if torch.cuda.is_available():
             self.cuda()

@@ -47,7 +47,7 @@ import infoToTrack
 import visualisation
 import itertools
 from infoToTrack import updateDataStorage
-
+import numpy as np
 random.seed(1111)
 torch.manual_seed(1111)
 
@@ -87,8 +87,7 @@ except:
     print('premade vocab not found, build a new one...')
     TEXT = torchtext.data.Field()    
     
-    
-    
+print('done')
 # =============================================================================
 # BUILD DATASET    
 # =============================================================================
@@ -224,6 +223,7 @@ d['directoryData']=directoryData
 d['directoryCkpt']=directoryCkpt
 d['directoryScripts']=directoryScripts
 d['Nexperience']=Nexperience
+d['vsize']=len(TEXT.vocab.itos)    
 
 
 
@@ -289,6 +289,19 @@ if __name__ == "__main__":
     else:
         print('model not implemented : ',args.model)
     print(model)
+    
+    
+    #counting trainable parameters
+    model_parameters = filter(lambda p: p.requires_grad, model.parameters())
+    params = sum([np.prod(p.size()) for p in model_parameters])
+    d['trainableParams']=params
+    
+    
+    #save to the descriptor
+    with open(os.path.join(directoryScripts, 'descriptor.txt'), 'a') as outstream:
+        line_new = '{:>12}  {:>12} \n'.format('trainableParameters', params)
+        outstream.write(line_new)
+    
     
     
 # =============================================================================
