@@ -63,12 +63,13 @@ class LanguageModelingDataset(data.Dataset):
         
         print('end gen')
         print(self.text.__next__())
+        print('built')
         #toy example used only to initiate the class with the attributes of the text.Dataset class
         self.examples = [data.Example.fromlist([self.text.__next__()], fields)]            
                  
         print('calling super')
         super(LanguageModelingDataset, self).__init__(
-            self.examples, fields, **kwargs)
+           self.examples, fields, **kwargs)
         
         print('lazy dataset built')
         
